@@ -1,0 +1,32 @@
+package:
+  name: tdtomonapari
+  version: {{ version }}
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  script: "{{ PYTHON }} -m pip install -e ."
+
+requirements:
+  host:
+    - python >=3.10
+    - pip
+  run:
+    - python >=3.10
+    - tomobase
+    - napari
+
+about:
+  home: https://github.com/Tcraig088/tdtomonapari
+  license: GPL3.0
+  license_family: GPL
+  summary: A library for running time-dependent tomography modules in napari
+  description: |
+    A library for running time-dependent tomography modules in napari.
+  license_file: ../LICENSE
+
+extra:
+  recipe-maintainers:
+    - tcraig258
