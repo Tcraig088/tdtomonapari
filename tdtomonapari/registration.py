@@ -53,4 +53,4 @@ class ModuleRegistration():
         self._tomoacquire_checked = True
         return self._tomoacquire_available
             
-TTOMO_NAPARI_MODULE_REGISTRATION = ModuleRegistration()
+TDTOMO_NAPARI_MODULE_REGISTRATION = ModuleRegistration()

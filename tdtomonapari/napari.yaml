@@ -1,9 +1,9 @@
-name: ttomonapari
+name: tdtomonapari
 contributions:
   commands:
-    - id: ttomonapari.start
+    - id: tdtomonapari.start
       title: Continuous Tomography
-      python_name: ttomonapari.napari.base:EntryWidget
+      python_name: tdtomonapari.napari.base:EntryWidget
   widgets:
-    - command: ttomonapari.start
+    - command: tdtomonapari.start
       display_name: Continuous Tomography
