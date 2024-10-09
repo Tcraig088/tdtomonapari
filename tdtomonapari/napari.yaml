@@ -4,6 +4,13 @@ contributions:
     - id: tdtomonapari.start
       title: Continuous Tomography
       python_name: tdtomonapari.napari.base:EntryWidget
+    - id: tdtomonapari.nanocage
+      title: Nanocage
+      python_name: tdtomonapari.napari.phantoms:nanocage
   widgets:
     - command: tdtomonapari.start
       display_name: Continuous Tomography
+  sample_data:
+    - key: nanocage
+      command: tdtomonapari.nanocage
+      display_name: Nanocage

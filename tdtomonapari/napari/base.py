@@ -43,7 +43,7 @@ class EntryWidget(QWidget):
             self.menu.addMenu(self.menus['Acquisition'])
             
         if TDTOMO_NAPARI_MODULE_REGISTRATION.tomobase:
-            self.menus['Tomography'] = tomobase.napari.TomographyMenuWidget(self.menu)
+            self.menus['Tomography'] = tomobase.napari.TomographyMenuWidget(self.viewer, self.menu)
             self.menu.addMenu(self.menus['Tomography'])
 
         self.layout = QVBoxLayout()
