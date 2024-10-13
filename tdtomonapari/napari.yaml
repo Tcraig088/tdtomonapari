@@ -7,10 +7,16 @@ contributions:
     - id: tdtomonapari.nanocage
       title: Nanocage
       python_name: tdtomonapari.napari.phantoms:nanocage
+    - id: tdtomonapari.nanocage2d
+      title: Nanocage
+      python_name: tdtomonapari.napari.phantoms:nanocage2d
   widgets:
     - command: tdtomonapari.start
       display_name: Continuous Tomography
   sample_data:
     - key: nanocage
       command: tdtomonapari.nanocage
-      display_name: Nanocage
+      display_name: Nanocage (volume)
+    - key: nanocage2d
+      command: tdtomonapari.nanocage2d
+      display_name: Nanocage (sinogram)
