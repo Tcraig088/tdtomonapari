@@ -44,9 +44,6 @@ class ModuleRegistration():
             try:
                 import tomoacquire
                 self._tomoacquire_available = True
-            except ModuleNotFoundError:
-                self._tomobase_available = False
-                logging.error("tomoacquire module not found. tomoacquire is an optional library for controlling the microscope.")
             except Exception as e:
                 self._tomoacquire_available = False
                 logging.error(e)

@@ -2,6 +2,7 @@ import napari
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QMenu, QAction
 from qtpy.QtCore import Qt
 from tdtomonapari.napari.log import LogWidget
+from tdtomonapari.napari.layer import LayerInfo
 from tdtomonapari.registration import TDTOMO_NAPARI_MODULE_REGISTRATION
 
 import logging
@@ -35,6 +36,20 @@ class EntryWidget(QWidget):
         self.menu = self.viewer.window.main_menu.addMenu("Continuous Tomography")
         self.menus = {}
         
+        self.menus['Utilities'] = {}
+        self.menus['Utilities']['Menu'] = QMenu('Utilities', self.menu)
+        self.menus['Utilities']['Log'] = QAction('Log', self.menus['Utilities']['Menu'])
+        self.menus['Utilities']['Layer Info'] = QAction('Layer Info',self.menus['Utilities']['Menu'])
+        
+        self.menus['Utilities']['Menu'].addAction(self.menus['Utilities']['Log'])
+        self.menus['Utilities']['Menu'].addAction(self.menus['Utilities']['Layer Info'])
+        
+        self.menu.addMenu(self.menus['Utilities']['Menu'])
+
+        
+        self.menus['Utilities']['Log'].triggered.connect(self.addLogWidget)
+        self.menus['Utilities']['Layer Info'].triggered.connect(self.addLayerInfoWidget)
+        
         self.viewer.window.add_dock_widget(LogWidget(), area='bottom')
         logger.info('Continuous Tomography Plugin Loaded')
 
@@ -49,4 +64,8 @@ class EntryWidget(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         
+    def addLogWidget(self):
+        self.viewer.window.add_dock_widget(LogWidget(), name='Log', area='bottom')
         
+    def addLayerInfoWidget(self):
+        self.viewer.window.add_dock_widget(LayerInfo(self.viewer), name='Layer Info', area='right')
