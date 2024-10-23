@@ -10,9 +10,19 @@ contributions:
     - id: tdtomonapari.nanocage2d
       title: Nanocage
       python_name: tdtomonapari.napari.phantoms:nanocage2d
+    - id: tdtomonapari.sinogram
+      title: Read Sinogram
+      python_name: tdtomonapari.napari.io:read_sinogram
   widgets:
     - command: tdtomonapari.start
       display_name: Continuous Tomography
+
+  readers:
+    - command: tdtomonapari.sinogram
+      filename_patterns:
+        - '*.h5'
+      accepts_directories: false
+
   sample_data:
     - key: nanocage
       command: tdtomonapari.nanocage
