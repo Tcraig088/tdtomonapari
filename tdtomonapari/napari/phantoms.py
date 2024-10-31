@@ -2,7 +2,7 @@ from functools import partial
 from typing import List
 from napari.types import LayerData
 from tomobase.log import logger
-from tomobase.tiltschemes import GRS
+from tomobase.tiltschemes import GRS, Incremental
 from tomobase import phantoms
 from tomobase import processes
 import napari
@@ -22,7 +22,7 @@ def _load_data(name, **kwargs) -> List[LayerData]:
             return layer
         case 'nanocage2d':
             vol = phantoms.nanocage()
-            grs = GRS(70, -70)
+            grs = Incremental(-70, 70,2)
             angles = [grs.get_angle() for i in range(1, 71)]
             sino = processes.project(vol, angles)
             

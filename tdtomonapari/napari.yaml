@@ -10,18 +10,32 @@ contributions:
     - id: tdtomonapari.nanocage2d
       title: Nanocage
       python_name: tdtomonapari.napari.phantoms:nanocage2d
-    - id: tdtomonapari.sinogram
+    - id: tdtomonapari.read_sinogram
       title: Read Sinogram
       python_name: tdtomonapari.napari.io:read_sinogram
+    - id: tdtomonapari.write_sinogram
+      title: Write Sinogram
+      python_name: tdtomonapari.napari.io:write_sinogram
+
   widgets:
     - command: tdtomonapari.start
       display_name: Continuous Tomography
 
   readers:
-    - command: tdtomonapari.sinogram
+    - command: tdtomonapari.read_sinogram
       filename_patterns:
         - '*.h5'
+        - '*.mrc'
       accepts_directories: false
+
+  writers:
+    - command: tdtomonapari.write_sinogram
+      layer_types:
+        - image
+      filename_extensions:
+        - '*.h5'
+        - '*.mrc'
+      
 
   sample_data:
     - key: nanocage

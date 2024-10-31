@@ -7,12 +7,17 @@ def read_sinogram(path):
 
 def read_to_viewer(path):
     sino = Sinogram.from_file(path)
-    
+    name = path.split('/')[-1]
+    name = name.split('.')[0]
     _dict = {}
-    _dict['viewsettings'] = {}
-    _dict['viewsettings']['colormap'] = 'gray'  
-    _dict['viewsettings']['contrast_limits'] = [0,sino.data.max()]
+    _dict['name'] = name   
+    _dict['contrast_limits'] = [0,sino.data.max()]
 
     napari.current_viewer().dims.ndisplay = 2
-    layer = [sino._to_napari_layer(True, **_dict)]
+    layer = [sino.to_data_tuple(_dict)]
     return layer
+
+def write_sinogram(path, layerdata, attributes):
+    sino = Sinogram.from_data_tuple(layerdata, attributes)
+    sino.to_file(path)
+    return path
