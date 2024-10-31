@@ -27,12 +27,9 @@ def _load_data(name, **kwargs) -> List[LayerData]:
             sino = processes.project(vol, angles)
             
             _dict =  kwargs
-            _dict['viewsettings'] = {}
-            _dict['viewsettings']['colormap'] = 'gray'  
-            _dict['viewsettings']['contrast_limits'] = [0,255]
             _dict['name'] = 'Nanocage 2D'
             napari.current_viewer().dims.ndisplay = 2
-            layer = [sino._to_napari_layer(True, **_dict)]
+            layer = [sino.to_data_tuple(_dict)]
             return layer
 
 # fmt: off
