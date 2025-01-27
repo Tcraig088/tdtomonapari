@@ -1,0 +1,1 @@
+from tomoacquire.napari.layer_widgets.scanwindow import ScanWindowDataWidget
