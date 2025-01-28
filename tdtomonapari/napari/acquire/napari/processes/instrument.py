@@ -230,5 +230,6 @@ class InstrumentWidget(QWidget):
         """
         self.connection_widget.onDelete()
         self.updateMicroscopes()
+        
     
     
