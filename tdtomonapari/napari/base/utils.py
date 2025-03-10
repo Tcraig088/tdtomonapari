@@ -30,6 +30,11 @@ def get_value(widget: QWidget):
 def get_widget(name: str, param):
     label = QLabel(name.capitalize().replace("_", " "))
     isdefault = True
+    
+    if callable(param):
+        sig = inspect.signature(param)
+        param = next(iter(sig.parameters.values()))
+        
     if param.default == inspect.Parameter.empty:
         isdefault = False
     if param.annotation == int:

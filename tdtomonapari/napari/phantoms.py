@@ -12,13 +12,13 @@ def _load_data(name, **kwargs) -> List[LayerData]:
         case 'nanocage':
             obj = phantoms.nanocage()
             _dict =  kwargs
-            _dict['viewsettings'] = {}
-            _dict['viewsettings']['colormap'] = 'magma'  
-            _dict['viewsettings']['contrast_limits'] = [0,3]
-            _dict['viewsettings']['rendering'] = 'attenuated_mip'
+            #_dict['viewsettings'] = {}
+            #_dict['viewsettings']['colormap'] = 'magma'  
+            #_dict['viewsettings']['contrast_limits'] = [0,3]
+            #_dict['viewsettings']['rendering'] = 'attenuated_mip'
             _dict['name'] = 'Nanocage'
             napari.current_viewer().dims.ndisplay = 3
-            layer = [obj._to_napari_layer(True, **_dict)]
+            layer = [obj.to_data_tuple(_dict)]
             return layer
         case 'nanocage2d':
             vol = phantoms.nanocage()

@@ -1,10 +1,9 @@
 
 from qtpy.QtWidgets import QDoubleSpinBox, QSpinBox, QGridLayout, QLabel
 
-from tomobase.napari.components import CollapsableWidget
 from tomobase.tiltschemes.tiltscheme  import Tiltscheme
 from tomobase.hooks import tomobase_hook_tiltscheme
-
+from tdtomonapari.napari.base.components import CollapsableWidget
 
 @tomobase_hook_tiltscheme('BINARY')
 class BinaryWidget(CollapsableWidget):

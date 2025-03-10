@@ -1,0 +1,1 @@
+from tdtomonapari.napari.main import EntryWidget

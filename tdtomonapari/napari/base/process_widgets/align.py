@@ -8,9 +8,9 @@ from tomobase.log import logger
 from tomobase.data import Volume, Sinogram
 from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
 from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
-from tomobase.napari.components import CollapsableWidget
-from tomobase.napari.utils import get_value, get_widget
-from tomobase.napari.process_widgets.process import ProcessWidget
+from tdtomonapari.napari.base.components import CollapsableWidget
+from tdtomonapari.napari.base.utils import get_value, get_widget
+from tdtomonapari.napari.base.process_widgets.process import ProcessWidget
 
 from threading import Thread
 from napari.qt.threading import thread_worker
@@ -19,6 +19,7 @@ class AlignWidget(ProcessWidget):
     def __init__(self, process:dict, viewer: 'napari.viewer.Viewer', parent=None):
         super().__init__(process=process, viewer=viewer, parent=None)
         self.name = process['name']
+        logger.info(f'Creating {self.name} Widget')
 
 
          

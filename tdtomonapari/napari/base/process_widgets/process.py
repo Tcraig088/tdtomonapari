@@ -14,9 +14,9 @@ from tomobase.log import logger
 from tomobase.data import Volume, Sinogram
 from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
 from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
-from tomobase.napari.components import CollapsableWidget
-from tomobase.napari.layer_widgets.layerselect import LayerSelctWidget
-from tomobase.napari.utils import get_value, get_widget, connect
+from tdtomonapari.napari.base.components import CollapsableWidget
+from tdtomonapari.napari.base.layer_widgets.layerselect import LayerSelctWidget
+from tdtomonapari.napari.base.utils import get_value, get_widget, connect
 
 from threading import Thread
 
@@ -77,6 +77,7 @@ class ProcessWidget(QWidget):
         
         first_param = next(param for name, param in signature.parameters.items() if name != 'self')
         logger.debug(f'First param: {first_param}')
+        print(first_param.annotation)
         self.selected_widget = LayerSelctWidget([first_param.annotation.get_type_id()], True, self.viewer)
 
         for name, param in signature.parameters.items():

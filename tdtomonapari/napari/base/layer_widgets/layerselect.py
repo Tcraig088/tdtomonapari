@@ -1,8 +1,9 @@
 
 from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
-from tomobase.napari.components.collapsable import CollapsableWidget
+from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout
 from qtpy.QtCore import Qt
+
 class LayerSelctWidget(CollapsableWidget):
     def __init__(self, layer_types, isfixed, viewer: 'napari.viewer.Viewer', parent=None):
         super().__init__('', parent)
