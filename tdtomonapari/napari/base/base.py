@@ -7,7 +7,7 @@ from tomobase.log import logger
 
 from tomobase.registrations.processes import TOMOBASE_PROCESSES
 from tomobase.registrations.transforms import TOMOBASE_TRANSFORM_CATEGORIES
-from tdtomonapari.napari.base.process_widgets.process import ProcessWidget 
+from tdtomonapari.napari.base.plugins.process import ProcessWidget 
 
 class TomographyMenuWidget(QMenu):  
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
@@ -27,7 +27,7 @@ class TomographyMenuWidget(QMenu):
                 if value.widget is None:
                     func = value
                     name = process_category.capitalize() + ': ' + key
-                    widget = ProcessWidget({ 'name': name, 'controller': func}, self.viewer)
+                    widget = ProcessWidget
                     #widget = None
                 else:
                     widget = value.widget

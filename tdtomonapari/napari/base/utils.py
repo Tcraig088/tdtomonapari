@@ -1,7 +1,8 @@
 import inspect
+import numpy as np
 from tomobase.log import logger
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
-
+from tomobase.typehints import TILTANGLETYPE
 
 def connect(widget: QWidget, func):
     if isinstance(widget, QSpinBox):
@@ -31,12 +32,17 @@ def get_widget(name: str, param):
     label = QLabel(name.capitalize().replace("_", " "))
     isdefault = True
     
-    if callable(param):
-        sig = inspect.signature(param)
-        param = next(iter(sig.parameters.values()))
+    #if callable(param):
+     #   sig = inspect.signature(param)
+      #  param = next(iter(sig.parameters.values()))
         
     if param.default == inspect.Parameter.empty:
         isdefault = False
+        
+    if param.annotation == np.array:
+        #dropdown widget
+        widget = QComboBox()
+        widget.addItem('Select Tilt Angles')
     if param.annotation == int:
         widget = QSpinBox()
         widget.setRange(0, 1000000)

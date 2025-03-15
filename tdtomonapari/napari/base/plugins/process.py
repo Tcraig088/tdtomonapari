@@ -12,16 +12,16 @@ from abc import ABC, abstractmethod
 
 from tomobase.log import logger
 from tomobase.data import Volume, Sinogram
+from tomobase.tiltschemes.tiltscheme import TiltScheme
 from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
 from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
 from tdtomonapari.napari.base.components import CollapsableWidget
-from tdtomonapari.napari.base.layer_widgets.layerselect import LayerSelctWidget
+from tdtomonapari.napari.base.plugins.layerselect import LayerSelctWidget
+from tdtomonapari.napari.base.plugins.tiltselect import TiltSelectWidget
 from tdtomonapari.napari.base.utils import get_value, get_widget, connect
-
 from threading import Thread
-
 from napari.qt.threading import create_worker
-
+from tomobase.typehints import TILTANGLETYPE
 
 class ProcessWidget(QWidget):
     def __init__(self, process:dict, viewer: 'napari.viewer.Viewer', parent=None):
@@ -53,17 +53,21 @@ class ProcessWidget(QWidget):
             self.setupFromFunc()
         
         self.layout = QGridLayout()
-        self.layout.addWidget(self.selected_widget, 0, 0 , 1, 2)
-        self.layout.addWidget(self.button_initialize, 1, 0)
+        
+        # Ensure selected_widget is initialized
+        if self.selected_widget is not None:
+            self.layout.addWidget(self.selected_widget, 0, 0, 1, 2)
+        
+        self.layout.addWidget(self.button_initialize, 1, 0, 1, 2)
                
-        i=2
         for j, key in enumerate(self.custom_widgets['Name']):
-            self.layout.addWidget(self.custom_widgets['Label'][j], j+i, 0)
-            self.layout.addWidget(self.custom_widgets['Widget'][j], j+i, 1)
-        i +=i
+            if isinstance(self.custom_widgets['Widget'][j], (LayerSelctWidget, TiltSelectWidget)):
+                self.layout.addWidget(self.custom_widgets['Widget'][j], j + 2, 0, 1, 2)
+            else:
+                self.layout.addWidget(self.custom_widgets['Label'][j], j + 2, 0)
+                self.layout.addWidget(self.custom_widgets['Widget'][j], j + 2, 1)
         
-        
-        self.layout.addWidget(self.button_confirm, i+2, 0)
+        self.layout.addWidget(self.button_confirm, j + 3, 0, 1, 2)
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
         
@@ -73,36 +77,32 @@ class ProcessWidget(QWidget):
         
     def setupFromFunc(self):
         signature = inspect.signature(self.process)
-        banned = ['self','sino', 'vol', 'kwargs']
-        
-        first_param = next(param for name, param in signature.parameters.items() if name != 'self')
-        logger.debug(f'First param: {first_param}')
-        print(first_param.annotation)
-        self.selected_widget = LayerSelctWidget([first_param.annotation.get_type_id()], True, self.viewer)
+        self.getWidgets(signature)
+
+    def setupFromClass(self):
+        signature = inspect.signature(self.process.__init__)
+        self.getWidgets(signature)
+
+    def getWidgets(self, signature):
+        banned = ['self', 'kwargs']
 
         for name, param in signature.parameters.items():
             if name not in banned:
-                wname, wlabel, widget = get_widget(name, param)
-                if wname is not None:
-                    self.custom_widgets['Widget'].append(widget)
-                    self.custom_widgets['Name'].append(wname)
-                    self.custom_widgets['Label'].append(wlabel)
-    
-    def setupFromClass(self):
-        signature = inspect.signature(self.process.__init__)
-        first_param = next(param for name, param in signature.parameters.items() if name != 'self')
-        self.selected_widget = LayerSelctWidget([first_param.annotation.get_type_id()], True, self.viewer)
-        
-        self.button_initialize.setVisible(True)
-        banned = ['self', 'sino', 'vol','kwargs']
-        for name, param in signature.parameters.items():
-            if name not in banned:
-                wname, wlabel, widget = get_widget(name, param)
-                if wname is not None:
-                    self.custom_widgets['Widget'].append(widget)
-                    self.custom_widgets['Name'].append(wname)
-                    self.custom_widgets['Label'].append(wlabel)
-        
+                if param.annotation == Volume or param.annotation == Sinogram:
+                    self.custom_widgets['Widget'].append(LayerSelctWidget([param.annotation.get_type_id()], True, self.viewer))
+                    self.custom_widgets['Name'].append(None)
+                    self.custom_widgets['Label'].append(None)
+                elif param.annotation == TILTANGLETYPE:
+                    self.custom_widgets['Widget'].append(TiltSelectWidget(self.viewer))
+                    self.custom_widgets['Name'].append(None)
+                    self.custom_widgets['Label'].append(None)
+                else:
+                    wname, wlabel, widget = get_widget(name, param)
+                    if wname is not None:
+                        self.custom_widgets['Widget'].append(widget)
+                        self.custom_widgets['Name'].append(wname)
+                        self.custom_widgets['Label'].append(wlabel)
+
     def initializeClass(self):
         if self.isinitialized:
             return
@@ -150,7 +150,6 @@ class ProcessWidget(QWidget):
     def onConfirm(self):
         if not self.validate():
             return
-        
         worker = create_worker(self.runProcess)
         worker.start()
         worker.returned.connect(self.onProcessComplete)
@@ -168,12 +167,10 @@ class ProcessWidget(QWidget):
         
     
     def runProcess(self):
-        
         if inspect.isclass(self.process):
             pass
         else: 
             self.selected_layer = self.selected_widget.getLayer()
-            
         layertype_id = self.selected_layer.metadata['ct metadata']['type']
         layertype = TOMOBASE_DATATYPES.key(layertype_id).capitalize()
         class_ = globals().get(layertype)
@@ -210,12 +207,10 @@ class ProcessWidget(QWidget):
     def runUpdate(self):
         if self.isrunning:
             return
-
         for i, key in enumerate(self.custom_widgets['Name']):
             setattr(self.process, self.custom_widgets['Name'][i], get_value(self.custom_widgets['Widget'][i]))  
             
         self.worker.start()
-
 
     def runUpdateThread(self):
         outputs = self.process.update()

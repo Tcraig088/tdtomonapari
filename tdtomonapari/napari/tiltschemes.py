@@ -1,7 +1,7 @@
 
 from qtpy.QtWidgets import QDoubleSpinBox, QSpinBox, QGridLayout, QLabel
 
-from tomobase.tiltschemes.tiltscheme  import Tiltscheme
+from tomobase.tiltschemes.tiltscheme  import TiltScheme
 from tomobase.hooks import tomobase_hook_tiltscheme
 from tdtomonapari.napari.base.components import CollapsableWidget
 
