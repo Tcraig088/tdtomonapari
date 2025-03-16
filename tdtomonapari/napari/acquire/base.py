@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tomoacquire.napari.processes import InstrumentWidget, ExperimentWidget
+from tdtomonapari.napari.acquire.processes import InstrumentWidget, ExperimentWidget
 
 class AcquistionMenuWidget(QMenu):  
     def __init__(self, viewer = None ,parent=None):
@@ -9,6 +9,7 @@ class AcquistionMenuWidget(QMenu):
         self.actions = {}
         self.viewer = viewer
         self.actions['Configs'] = self.addAction('Configurations')
+        self.actions['Connect'] = self.addAction('Connect')
         self.actions['Instrument'] = self.addAction('Instrument')
         self.actions['Callibration'] = self.addAction('Callibration')
         self.actions['Experiment'] = self.addAction('Experiment')

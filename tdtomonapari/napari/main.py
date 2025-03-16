@@ -4,7 +4,8 @@ from qtpy.QtCore import Qt
 from tdtomonapari.napari.log import LogWidget
 from tdtomonapari.napari.layer import LayerInfo
 from tdtomonapari.registration import TDTOMO_NAPARI_MODULE_REGISTRATION
-from tdtomonapari.napari.base import base as basegui
+from tdtomonapari.napari.base.base import TomographyMenuWidget
+from tdtomonapari.napari.acquire.base import AcquistionMenuWidget
 
 import logging
 logger = logging.getLogger('tomobase_logger')
@@ -55,12 +56,12 @@ class EntryWidget(QWidget):
         logger.info('Continuous Tomography Plugin Loaded')
 
         if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
-            #self.menus['Acquisition'] = tomo.napari.AcquistionMenuWidget(self.viewer, self.menu)
-            #self.menu.addMenu(self.menus['Acquisition'])
+            self.menus['Acquisition'] = AcquistionMenuWidget(self.viewer, self.menu)
+            self.menu.addMenu(self.menus['Acquisition'])
             pass
         
         if TDTOMO_NAPARI_MODULE_REGISTRATION.tomobase:
-            self.menus['Tomography'] = basegui.TomographyMenuWidget(self.viewer, self.menu)
+            self.menus['Tomography'] = TomographyMenuWidget(self.viewer, self.menu)
             self.menu.addMenu(self.menus['Tomography'])
 
         self.layout = QVBoxLayout()

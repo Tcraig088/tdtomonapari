@@ -1,0 +1,2 @@
+from tdtomonapari.napari.acquire.processes.instrument import InstrumentWidget
+from tdtomonapari.napari.acquire.processes.experiment import ExperimentWidget

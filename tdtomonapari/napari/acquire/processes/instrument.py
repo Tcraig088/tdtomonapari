@@ -9,6 +9,9 @@ import numpy as np
 
 from tomobase import TOMOBASE_DATATYPES
 from tomoacquire.scanwindow import ScanWindow
+from tdtomonapari.napari.base.components import CollapsableWidget
+from tdtomonapari.napari.base.components import CheckableComboBox
+
 
 class ScanSettingsWidget(CollapsableWidget):
     def __init__(self, title, parent):

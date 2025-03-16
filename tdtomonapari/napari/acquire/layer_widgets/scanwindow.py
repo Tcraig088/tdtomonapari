@@ -1,7 +1,7 @@
 import napari
 import numpy as np
 
-from tomobase.napari.components import CollapsableWidget
+from tdtomonapari.napari.base.components import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QLabel, QCheckBox, QComboBox, QGridLayout
 from qtpy.QtCore import Qt
 

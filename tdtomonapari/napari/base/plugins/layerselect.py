@@ -81,7 +81,7 @@ class LayerSelctWidget(CollapsableWidget):
         else:
             self.combobox_select.setCurrentIndex(0)
             
-    def getLayer(self):
+    def Parse(self):
         for layer in self.viewer.layers:
             if layer.name == self.combobox_select.currentText():
                 return layer

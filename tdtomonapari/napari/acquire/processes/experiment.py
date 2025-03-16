@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QWidget, QComboBox, QLabel, QHBoxLayout, QLineEdit, QVBoxLayout, QPushButton, QGridLayout, QDoubleSpinBox
 from qtpy.QtCore import Qt
 
-from tomobase.napari.components import CheckableComboBox, FileSaveDialog
+from tdtomonapari.napari.base.components import CheckableComboBox, FileSaveDialog
 from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
 from tomobase.log import logger
   

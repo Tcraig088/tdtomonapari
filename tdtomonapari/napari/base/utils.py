@@ -26,7 +26,11 @@ def get_value(widget: QWidget):
     elif isinstance(widget, QCheckBox):
         return widget.isChecked()
     else:
-        logger.warning(f'Widget {widget} has an unsupported type')
+        return widget.Parse()
+        try:
+            pass 
+        except:
+            logger.warning(f'Widget {widget} has an unsupported type')
 
 def get_widget(name: str, param):
     label = QLabel(name.capitalize().replace("_", " "))
