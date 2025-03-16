@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tdtomonapari.napari.acquire.processes import InstrumentWidget, ExperimentWidget
+from tdtomonapari.napari.acquire.processes import InstrumentWidget, ExperimentWidget, ConnectWidget
 
 class AcquistionMenuWidget(QMenu):  
     def __init__(self, viewer = None ,parent=None):
@@ -14,9 +14,15 @@ class AcquistionMenuWidget(QMenu):
         self.actions['Callibration'] = self.addAction('Callibration')
         self.actions['Experiment'] = self.addAction('Experiment')
 
+        self.actions['Connect'].triggered.connect(self.on_connect_triggered)
         self.actions['Instrument'].triggered.connect(self.on_instrument_triggered)
         self.actions['Experiment'].triggered.connect(self.on_experiment_triggered)
         
+
+    def on_connect_triggered(self):
+        if self.viewer is not None:
+            self.viewer.window.add_dock_widget(ConnectWidget(self.viewer), area='right', name='Connection Settings')
+
     def on_instrument_triggered(self):
         if self.viewer is not None:
             self.viewer.window.add_dock_widget(InstrumentWidget(self.viewer), area='right', name='Instrument Settings')
