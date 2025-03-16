@@ -41,5 +41,13 @@ class CheckableComboBox(QComboBox):
                 checked_items.append(item.text())
         self.setCurrentText(", ".join(checked_items))  # Update the display text
 
+    def getCheckedItems(self):
+        checked_items = []
+        for index in range(self.model.rowCount()):
+            item = self.model.item(index)
+            if item.checkState() == Qt.Checked:
+                checked_items.append(item.text())
+        return checked_items
+
 
 

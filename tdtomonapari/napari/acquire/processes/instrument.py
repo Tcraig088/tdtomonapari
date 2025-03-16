@@ -1,5 +1,5 @@
 from qtpy.QtWidgets import QWidget, QComboBox, QLabel, QHBoxLayout, QLineEdit, QVBoxLayout, QPushButton, QGridLayout, QDoubleSpinBox
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QObject, Signal
 import importlib
 import inspect
 import json
@@ -21,7 +21,7 @@ class ScanSettingsWidget(CollapsableWidget):
         self.label_dwell_time = QLabel('Dwell Time (\u03BCs):')
         self.double_spinbox_dwell_time = QDoubleSpinBox()
         self.double_spinbox_dwell_time.setSingleStep(0.01)
-        self.double_spinbox_dwell_time.setValue(1.0)
+        self.double_spinbox_dwell_time.setValue(0.5)
         self.label_frame_size = QLabel('Frame Size (px):')
         self.combobox_frame_size = QComboBox()
         self.combobox_frame_size.addItem('2048')
@@ -31,7 +31,7 @@ class ScanSettingsWidget(CollapsableWidget):
         self.label_frame_time= QLabel('Frame Time (s):')
         self.double_spinbox_frame_time = QDoubleSpinBox()
         self.double_spinbox_frame_time.setSingleStep(0.01)
-        self.double_spinbox_frame_time.setValue(1.0)
+        self.double_spinbox_frame_time.setValue(0.63)
         
         self.layout = QGridLayout()
         self.layout.addWidget(self.label_dwell_time, 0, 0)
@@ -43,6 +43,13 @@ class ScanSettingsWidget(CollapsableWidget):
         
         self.setLayout(self.layout)
 
+    def Parse(self):
+        scan_dict = {}
+        scan_dict['dwell'] = self.double_spinbox_dwell_time.value() * 10**(-6)
+        scan_dict['frame'] = int(self.combobox_frame_size.currentText())
+        scan_dict['exptime'] = self.double_spinbox_frame_time.value()
+        return scan_dict
+    
 class InstrumentWidget(QWidget):
     def __init__(self, viewer=None, parent=None):
         super().__init__(parent)
@@ -74,18 +81,29 @@ class InstrumentWidget(QWidget):
         self.button_confirm.clicked.connect(self.onConfirm) 
 
     def onConfirm(self):
-        if TOMOACQUIRE_CONTROLLER.states != MicroscopeState.CONNECTED:
+        if TOMOACQUIRE_CONTROLLER.states == MicroscopeState.CONNECTED:
+            TOMOACQUIRE_CONTROLLER.set_detectors(self.combobox_detectors.getCheckedItems())
             TOMOACQUIRE_CONTROLLER.set_scan(self.scan_settings.Parse())
             TOMOACQUIRE_CONTROLLER.set_acquisition(self.acquisition_settings.Parse())
-            TOMOACQUIRE_CONTROLLER.set_detectors(self.combobox_detectors.getCheckedItems())
-            TOMOACQUIRE_CONTROLLER.states = MicroscopeState.DetectorsInitialized
+            TOMOACQUIRE_CONTROLLER.states = MicroscopeState.DETECTORSINIT
+            TOMOACQUIRE_CONTROLLER.start_scan()
+
+            self.scanwindow = TOMOACQUIRE_CONTROLLER.microscope.scanwindow
+            TOMOACQUIRE_CONTROLLER.microscope.scanwindow_updated.connect(self.update_viewer)
         else:
             TOMOACQUIRE_CONTROLLER.states = MicroscopeState.CONNECTED
 
-        scan_window = Image(TOMOACQUIRE_CONTROLLER)
-        value = scan_window._to_napari_layer(astuple=True)
-        self.viewer._add_layer_from_data(*value)
+    def update_viewer(self):
+        self.scanwindow = TOMOACQUIRE_CONTROLLER.microscope.scanwindow
+        for layer in self.viewer.layers:
+            if layer.name == 'Scan Window':
+                layer.data = self.scanwindow.data
+                layer.refresh()
+                return
+        if np.max(self.scanwindow.data) != 0:
+            layerdata = self.scanwindow.to_data_tuple(attributes={'name': 'Scan Window'})
+            self.viewer._add_layer_from_data(*layerdata)
 
-        
-    
-    
+
+
+

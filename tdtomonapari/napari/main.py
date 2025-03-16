@@ -1,3 +1,6 @@
+#import pythoncom
+#pythoncom.CoUninitialize()
+
 import napari
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QMenu, QAction
 from qtpy.QtCore import Qt
