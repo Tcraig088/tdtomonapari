@@ -89,11 +89,26 @@ class InstrumentWidget(QWidget):
             TOMOACQUIRE_CONTROLLER.start_scan()
 
             self.scanwindow = TOMOACQUIRE_CONTROLLER.microscope.scanwindow
-            TOMOACQUIRE_CONTROLLER.microscope.scanwindow_updated.connect(self.update_viewer)
+            self.acqwindow = TOMOACQUIRE_CONTROLLER.microscope.acqwindow
+            TOMOACQUIRE_CONTROLLER.microscope.scanwindow_updated.connect(self.update_scan)
+            TOMOACQUIRE_CONTROLLER.microscope.acqwindow_updated.connect(self.update_acq)
         else:
             TOMOACQUIRE_CONTROLLER.states = MicroscopeState.CONNECTED
 
-    def update_viewer(self):
+    def update_acq(self):
+        self.acqwindow = TOMOACQUIRE_CONTROLLER.microscope.acqwindow
+        for layer in self.viewer.layers:
+            if layer.name == 'Acquisition Window':
+                layer.data = self.acqwindow.data
+                layer.refresh()
+                TOMOACQUIRE_CONTROLLER.microscope.set_scan_mode(True)
+                return
+            
+        if np.max(self.acqwindow.data) != 0:
+            layerdata = self.acqwindow.to_data_tuple(attributes={'name': 'Acquisition Window'})
+            self.viewer._add_layer_from_data(*layerdata)
+
+    def update_scan(self):
         self.scanwindow = TOMOACQUIRE_CONTROLLER.microscope.scanwindow
         for layer in self.viewer.layers:
             if layer.name == 'Scan Window':
