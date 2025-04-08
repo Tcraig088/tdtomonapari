@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tdtomonapari.napari.acquire.processes import ScanWidget, InstrumentWidget, ExperimentWidget, ConnectWidget
+from tdtomonapari.napari.acquire.processes import ScanWidget, InstrumentWidget, ExperimentWidget, ConnectWidget, MicroscopeWidget
 
 class AcquistionMenuWidget(QMenu):  
     def __init__(self, viewer = None ,parent=None):
@@ -19,7 +19,12 @@ class AcquistionMenuWidget(QMenu):
         self.actions['Instrument'].triggered.connect(self.on_instrument_triggered)
         self.actions['Scan Controls'].triggered.connect(self.on_scan_controls_triggered)
         self.actions['Experiment'].triggered.connect(self.on_experiment_triggered)
-        
+        self.actions['Configs'].triggered.connect(self.on_acq2_triggered)
+
+    def on_acq2_triggered(self):
+        if self.viewer is not None:
+            self.viewer.window.add_dock_widget(MicroscopeWidget(self.viewer), area='right', name='Microscope Controls')
+   
     def on_connect_triggered(self):
         if self.viewer is not None:
             self.viewer.window.add_dock_widget(ConnectWidget(self.viewer), area='right', name='Connection Settings')

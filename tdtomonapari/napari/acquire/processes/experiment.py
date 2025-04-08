@@ -8,17 +8,15 @@ from tomobase.log import logger
 class ExperimentWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.filedialog = FileSaveDialog()
-        self.filedialog.set_extensions(mrc='Medical Research Council', tiff='Tagged Image File Format')
-        
-        self.label_maginification = QLabel('Magnification:')
-        self.combobox_maginification = QComboBox()
-        self.combobox_maginification.addItem('Select Magnification')
-        self.combobox_maginification.setCurrentIndex(0)
-        
+
+        self.experiment_type = None
         self.label_options = QLabel('Options:')
         self.combobox_options = CheckableComboBox(self)
         self.combobox_options.addItem("Select Options")
+        self.combobox.addItem("Correct Backlash")
+
+        self.combobox_options.addItem("Select Experiment Type")
+
         
         self.label_tiltscheme = QLabel('Tilt Scheme:')  
         self.combobox_tiltscheme = QComboBox()

@@ -22,6 +22,13 @@ class ScanWidget(QWidget):
         self.magnifications_slider = QSlider(Qt.Horizontal)
         self.magnifications_slider.setMinimum(0)
         self.magnifications_slider.setMaximum(len(TOMOACQUIRE_CONTROLLER.microscope.magnification_options)-1)
+        
+        mag = TOMOACQUIRE_CONTROLLER.microscope.magnification
+        array = TOMOACQUIRE_CONTROLLER.microscope.magnification_options
+        index = np.abs(array - mag).argmin()
+        self.magnifications_slider.setValue(index)
+
+
         self.blanked_checkbox = QCheckBox('Blanked') 
         self.blanked_checkbox.setChecked(TOMOACQUIRE_CONTROLLER.microscope.isblank)
         self.acq_button = QPushButton('Acquire')
@@ -40,7 +47,7 @@ class ScanWidget(QWidget):
         self.blanked_checkbox.stateChanged.connect(self.on_blank_changed)
 
     def on_magnification_changed(self):
-        TOMOACQUIRE_CONTROLLER.microscope.set_magnification(self.magnifications_slider.value())
+        TOMOACQUIRE_CONTROLLER.microscope.magnification = self.magnifications_slider.value()
 
     def on_blank_changed(self):
         TOMOACQUIRE_CONTROLLER.microscope.isblank = self.blanked_checkbox.isChecked()
