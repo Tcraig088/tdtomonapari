@@ -1,30 +1,139 @@
 import numpy as np
-import napari
 import inspect
 from collections.abc import Iterable
-import time
-import copy as deepcopy
-
-from qtpy.QtWidgets import QWidget, QComboBox, QLabel, QSpinBox, QHBoxLayout, QLineEdit, QVBoxLayout, QCheckBox, QPushButton, QGridLayout, QDoubleSpinBox
-from qtpy.QtCore import Qt
-
 from abc import ABC, abstractmethod
+import time
 
+import coolname
 
-from tomobase.data import Volume, Sinogram, Data
-from tomobase.log import logger
-from tomobase.tiltschemes.tiltscheme import TiltScheme
-from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
-from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
-from tdtomonapari.napari.base.components import CollapsableWidget
-from tdtomonapari.napari.base.plugins.layerselect import LayerSelctWidget
-from tdtomonapari.napari.base.plugins.tiltselect import TiltSelectWidget
-from tdtomonapari.napari.base.utils import get_value, get_widget, connect
+import napari
+from qtpy.QtWidgets import QWidget, QComboBox, QLabel, QSpinBox, QHBoxLayout, QLineEdit, QVBoxLayout, QCheckBox, QPushButton, QGridLayout, QDoubleSpinBox
+from qtpy.QtCore import Qt, Signal
 from threading import Thread
 from napari.qt.threading import create_worker
-from tomobase.typehints import TILTANGLETYPE
+
+from tomobase.data import Volume, Sinogram, Data
+from tomobase.globals import logger, xp,  TOMOBASE_DATATYPES, progresshandler, GPUContext
+from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
+
+from tdtomonapari.napari.base.components import CollapsableWidget, ProgressWidget
+from tdtomonapari.napari.base.utils import get_values, get_widgets, LayerSelectWidget
 
 class ProcessWidget(QWidget):
+    closed = Signal()
+
+    def __init__(self, process, viewer: 'napari.viewer.Viewer', parent=None):
+        super().__init__(parent)
+        self.viewer = viewer
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        self.process = process.value
+        self.name = process.name
+        self.progress = {}
+
+        self.widget_list = get_widgets(self.process, self.viewer)
+        count = len([item for item in self.widget_list if isinstance(item.widget, LayerSelectWidget)])
+        if count == 1:
+            self.widget_list[0].widget.linkLayer()
+
+        self.confirm_button = QPushButton('Confirm')
+
+        self.layout = QVBoxLayout()
+        for i, item in enumerate(self.widget_list):
+            self.layout.addWidget(item.widget)
+
+        self.layout.addWidget(self.confirm_button)
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+        self.confirm_button.clicked.connect(self.onConfirm)
+
+        progresshandler.added.connect(self.onProgressStart)
+        progresshandler.added_subsignal.connect(self.onSubSignalProgressStart)
+
+
+    def onProgressStart(self, progress):
+        signal_key = progress.upper().replace(' ', '_')
+        if progresshandler[signal_key].name == self.process.__name__ or progresshandler[signal_key].value.inheritor == self.process.__name__:
+            self.progress[progress] = ProgressWidget(progress, self.viewer)
+            self.layout.addWidget(self.progress[progress])
+    
+
+    def onSubSignalProgressStart(self, progress, subprogress):
+        if progress in self.progress:
+            self.progress[subprogress] = ProgressWidget(subprogress, self.viewer)
+            self.layout.addWidget(self.progress[subprogress])
+
+
+    def onConfirm(self):
+        self.start_time = time.perf_counter()
+        worker = create_worker(self.runProcess)
+        worker.start()
+        worker.returned.connect(self.onComplete)
+        self.confirm_button.hide()
+        
+    def runProcess(self):
+        logger.info(f'Process {self.name} started')
+        values = get_values(self.widget_list)
+
+
+        if 'inplace' not in values:
+            self.inplace = False 
+        else:
+            self.inplace = values['inplace']
+
+        layer_names = []
+        for i, item in enumerate(self.widget_list):
+            if isinstance(item.widget, LayerSelectWidget):
+                layer_names.append(item.widget.getLayerName())
+       
+        self.outputs = self.process(**values)
+        self.layer_indices = LayerSelectWidget.getLayerIndex(self.viewer, layer_names)
+
+    def processOutput(self, output, inplace, indices):
+        if isinstance(output, Data):
+            output.set_context(GPUContext.NUMPY, 0)
+            if inplace:
+                index = indices[0]
+                layerdata = output.to_data_tuple()
+                self.viewer.layers[index].data = layerdata[0]
+                self.viewer.layers[index].metadata = layerdata[1]['metadata']
+                self.viewer.layers[index].scale = layerdata[1]['scale']
+                indices.pop()
+            else:
+                name = coolname.generate_slug(2).replace('-', ' ').title().replace(' ', '')
+                layerdata = output.to_data_tuple(attributes={'name': name})
+                self.viewer._add_layer_from_data(*layerdata)
+        else:
+            name = coolname.generate_slug()
+            TDTOMONAPARI_VARIABLES[name] = output
+            TDTOMONAPARI_VARIABLES.refresh()
+
+        for layer in self.viewer.layers:
+            layer.refresh()
+
+    def onComplete(self):
+        if isinstance(self.outputs, tuple):
+            for item in self.outputs:
+                self.processOutput(item, self.inplace, self.layer_indices)
+        else:
+            self.processOutput(self.outputs, self.inplace, self.layer_indices)
+
+        elapsed = time.perf_counter() - self.start_time
+        # reformat to hh: mm: ss
+        hours, remainder = divmod(elapsed, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        logger.info(f'Process {self.name} completed in {int(hours):02}h : {int(minutes):02}m : {np.round(seconds,3)}s')
+
+        
+        self.close()
+        self.closed.emit()
+
+                            
+
+
+class ProcessWidget2(QWidget):
     def __init__(self, process:dict, viewer: 'napari.viewer.Viewer', parent=None):
         super().__init__(parent)
 

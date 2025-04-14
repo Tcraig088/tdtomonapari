@@ -1,77 +1,62 @@
-#import pythoncom
-#pythoncom.CoUninitialize()
-
 import napari
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QMenu, QAction
 from qtpy.QtCore import Qt
+
 from tdtomonapari.napari.log import LogWidget
 from tdtomonapari.napari.layer import LayerInfo
+from tdtomonapari.napari.variables import VariablesWidget
+from tdtomonapari.napari.gpu import ContextWidget
+
 from tdtomonapari.registration import TDTOMO_NAPARI_MODULE_REGISTRATION
 from tdtomonapari.napari.base.base import TomographyMenuWidget
-from tdtomonapari.napari.acquire.base import AcquistionMenuWidget
 
-import logging
-logger = logging.getLogger('tomobase_logger')
-if TDTOMO_NAPARI_MODULE_REGISTRATION.tomobase:
-    import tomobase
+
+from tomobase.globals import logger
 if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
     import tomoacquire
-    
-    
-def napari_enter(viewer: 'napari.viewer.Viewer'):
-    menu = viewer.window.main_menu.addMenu("Continuous Tomography")
-    menus = {}
-    
-    if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
-        menus['Acquisition'] = tomoacquire.napari.AcquistionMenuWidget(menu)
-        menu.addMenu(menus['Acquisition'])
-
-        
-    if TDTOMO_NAPARI_MODULE_REGISTRATION.tomobase:
-        menus['Tomography'] = tomobase.napari.TomographyMenuWidget(menu)
-        menu.addMenu(menus['Tomography'])
-
+    from tdtomonapari.napari.acquire.base import AcquistionMenuWidget
     
 class EntryWidget(QWidget):    
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
         super().__init__(parent)
         
         self.viewer = viewer
+        #self.setAttribute(Qt.WA_DeleteOnClose)
         
-        self.menu = self.viewer.window.main_menu.addMenu("Continuous Tomography")
-        self.menus = {}
-        
-        self.menus['Utilities'] = {}
-        self.menus['Utilities']['Menu'] = QMenu('Utilities', self.menu)
-        self.menus['Utilities']['Log'] = QAction('Log', self.menus['Utilities']['Menu'])
-        self.menus['Utilities']['Layer Info'] = QAction('Layer Info',self.menus['Utilities']['Menu'])
-        
-        self.menus['Utilities']['Menu'].addAction(self.menus['Utilities']['Log'])
-        self.menus['Utilities']['Menu'].addAction(self.menus['Utilities']['Layer Info'])
-        
-        self.menu.addMenu(self.menus['Utilities']['Menu'])
+        main_menu = self.viewer.window.main_menu.addMenu("Continuous Tomography")
+        menu = QMenu('Utilities', main_menu)
+        main_menu.addMenu(menu)
 
-        
-        self.menus['Utilities']['Log'].triggered.connect(self.addLogWidget)
-        self.menus['Utilities']['Layer Info'].triggered.connect(self.addLayerInfoWidget)
-        
-        self.viewer.window.add_dock_widget(LogWidget(), area='bottom')
-        logger.info('Continuous Tomography Plugin Loaded')
+        log_action = QAction('Log', menu)
+        layer_action = QAction('Layer Info',menu)
+        variables_action = QAction('WorkSpace', menu)
+        context_action = QAction('Context', menu)
+
+
+        menu.addAction(log_action)
+        menu.addAction(layer_action)
+        menu.addAction(variables_action)
+        menu.addAction(context_action)
+
+        log_action.triggered.connect(self.addLogWidget)
+        layer_action.triggered.connect(self.addLayerInfoWidget)
+        variables_action.triggered.connect(self.addVariablesWidget)
+        context_action.triggered.connect(self.addContextWidget)
 
         if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
-            self.menus['Acquisition'] = AcquistionMenuWidget(self.viewer, self.menu)
-            self.menu.addMenu(self.menus['Acquisition'])
-            pass
-        
-        if TDTOMO_NAPARI_MODULE_REGISTRATION.tomobase:
-            self.menus['Tomography'] = TomographyMenuWidget(self.viewer, self.menu)
-            self.menu.addMenu(self.menus['Tomography'])
+            main_menu.addMenu(AcquistionMenuWidget(self.viewer, main_menu))
+        main_menu.addMenu(TomographyMenuWidget(self.viewer, main_menu))
 
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
+
         
     def addLogWidget(self):
-        self.viewer.window.add_dock_widget(LogWidget(), name='Log', area='bottom')
-        
+        self.viewer.window.add_dock_widget(LogWidget(self.viewer), name='Log', area='bottom')
+
     def addLayerInfoWidget(self):
         self.viewer.window.add_dock_widget(LayerInfo(self.viewer), name='Layer Info', area='right')
+
+    def addVariablesWidget(self):
+        self.viewer.window.add_dock_widget(VariablesWidget(self.viewer), name='Workspace', area='left')
+    
+    def addContextWidget(self):
+        self.viewer.window.add_dock_widget(ContextWidget(self.viewer), name='Context', area='right')
