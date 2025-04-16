@@ -6,7 +6,6 @@ import json
 import os
 import numpy as np
 import copy
-from tdtomonapari.napari.base.utils import get_value, get_widget, connect
 from tomoacquire.registrations import TOMOACQUIRE_MICROSCOPES
 from tomobase import TOMOBASE_DATATYPES
 from tomoacquire.states import MicroscopeState
@@ -14,6 +13,7 @@ from tomoacquire.controllers.controller import TOMOACQUIRE_CONTROLLER
 from tomoacquire.scanwindow import ScanWindow
 from tdtomonapari.napari.base.components import CollapsableWidget
 from tdtomonapari.napari.base.components import CheckableComboBox
+from tdtomonapari.napari.base.utils import get_widgets, get_values
 from tomoacquire import config
 from tomobase.log import logger
 import threading
@@ -72,68 +72,18 @@ class ScanSettingsWidget(CollapsableWidget):
         
         self.microscope.set_scan(**scan_dict)
 
-class ConnectSettingsWidget(CollapsableWidget):
-    def __init__(self, title, microscope, parent):
-        super().__init__(title, parent)
-        self.isconnected = False
-        self.microscope = microscope
-        signature = inspect.signature(microscope.value.__init__)
-        self.custom_widgets = {
-            'Name': [],
-            'Label': [],
-            'Widget': []
-        }
-        banned = ['self', 'kwargs']
-        for name, param in signature.parameters.items():
-            if name not in banned:
-                wname, wlabel, widget = get_widget(name, param)
-                if wname is not None:
-                    self.custom_widgets['Widget'].append(widget)
-                    self.custom_widgets['Name'].append(wname)
-                    self.custom_widgets['Label'].append(wlabel)
-
-        self.button = QPushButton('Connect')
-        self.layout = QGridLayout()
-        for i, widget in enumerate(self.custom_widgets['Widget']):
-            self.layout.addWidget(self.custom_widgets['Label'][i], i, 0)
-            self.layout.addWidget(widget, i, 1)
-
-        self.layout.addWidget(self.button)
-        self.setLayout(self.layout)
-
-    def on_connect(self):
-        if not self.isconnected:
-            _dict = {}
-            for i, widget in enumerate(self.custom_widgets['Widget']):
-                name = self.custom_widgets['Name'][i]
-                value = get_value(widget)
-                _dict[name] = value
-                #be careful with this the last thing i want is to mess with the registration
-            self.microscope = self.microscope(**_dict)
-            self.button.setText('Disconnect')
-            for i, widget in enumerate(self.custom_widgets['Widget']):
-                widget.setEnabled(False)
-        else:
-            self.microscope.disconnect()
-            for i, widget in enumerate(self.custom_widgets['Widget']):
-                widget.setEnabled(True)
-                if name in self.microscope.value.__dict__:
-                    self.microscope.value.__dict__[name] = value
-            self.button.setText('Connect')
-
-        return self.microscope
 
 class MicroscopeWidget(QWidget):
     def __init__(self, viewer=None, parent=None):
         super().__init__(parent)
-
+        self.viewer = viewer
         self.microscope_combobox = QComboBox(self)
         self.microscope_combobox.addItem("Select Microscope")
         for key, value in TOMOACQUIRE_MICROSCOPES.items():
             self.microscope_combobox.addItem(value.name)
 
         self.microscope_combobox.setCurrentText("Select Microscope")
-        self.microscope_combobox.currentTextChanged.connect(self.on_select)
+        self.microscope_combobox.currentTextChanged.connect(self.onSelect)
 
         self.layout = QGridLayout()
         self.layout.addWidget(self.microscope_combobox, 0, 0 ,1, 2)
@@ -143,7 +93,7 @@ class MicroscopeWidget(QWidget):
 
         self.connection_widget = None
 
-    def on_select(self):
+    def onSelect(self):
         name = self.microscope_combobox.currentText()
         key = name.upper().replace(" ", "_")
 
@@ -156,13 +106,13 @@ class MicroscopeWidget(QWidget):
             logger.warning(f"Must Select a microscope")
         else:
             logger.debug(f"Selected {key} microscope")
-            self.microscope = TOMOACQUIRE_MICROSCOPES[key]
-            self.connection_widget = ConnectSettingsWidget(f"Connection Settings", self.microscope, self)
+            self.microscope = TOMOACQUIRE_MICROSCOPES[key].value
+            self.connection_widget = ConnectSettingsWidget(f"Connection Settings", self.microscope, self.viewer, self)
             self.layout.addWidget(self.connection_widget, 1, 0, 1, 2)
-            self.connection_widget.button.clicked.connect(self.on_connect)
+            self.connection_widget.button.clicked.connect(self.onConnect)
 
-    def on_connect(self):
-        self.microscope = self.connection_widget.on_connect()
+    def onConnect(self):
+        self.microscope = self.connection_widget.onConnect()
         msg = self.microscope.connect()
         self.detector_options = msg['detectors']
         detectors = []

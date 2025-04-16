@@ -1,42 +1,42 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tdtomonapari.napari.acquire.processes import ScanWidget, InstrumentWidget, ExperimentWidget, ConnectWidget, MicroscopeWidget
-
+from tdtomonapari.napari.acquire.controls import ConnectWidget, StageWidget
+from tomobase.log import logger
 class AcquistionMenuWidget(QMenu):  
     def __init__(self, viewer = None ,parent=None):
         super().__init__("Acquisition", parent)
         self.actions = {}
         self.viewer = viewer
-        self.actions['Configs'] = self.addAction('Configurations')
-        self.actions['Connect'] = self.addAction('Connect')
-        self.actions['Instrument'] = self.addAction('Instrument')
-        self.actions['Scan Controls'] = self.addAction('Scan Controls')
-        self.actions['Callibration'] = self.addAction('Callibration')
-        self.actions['Experiment'] = self.addAction('Experiment')
+        self.microscope = None
+        
+        self.actions['Configs'] = self.addAction('Connect')
+        self.actions['Configs'].triggered.connect(self.onConnectTriggered)
 
-        self.actions['Connect'].triggered.connect(self.on_connect_triggered)
-        self.actions['Instrument'].triggered.connect(self.on_instrument_triggered)
-        self.actions['Scan Controls'].triggered.connect(self.on_scan_controls_triggered)
-        self.actions['Experiment'].triggered.connect(self.on_experiment_triggered)
-        self.actions['Configs'].triggered.connect(self.on_acq2_triggered)
+        menu = self.addMenu("Controls")
+        self.actions['Scanning'] = menu.addAction("Scanning") 
+        self.actions['Stage'] = menu.addAction("Stage")
 
-    def on_acq2_triggered(self):
-        if self.viewer is not None:
-            self.viewer.window.add_dock_widget(MicroscopeWidget(self.viewer), area='right', name='Microscope Controls')
-   
-    def on_connect_triggered(self):
-        if self.viewer is not None:
-            self.viewer.window.add_dock_widget(ConnectWidget(self.viewer), area='right', name='Connection Settings')
+        #self.actions['Scanning'].triggered.connect(self.onScanningTriggered)
+        self.actions['Stage'].triggered.connect(self.onStageTriggered)
 
-    def on_instrument_triggered(self):
-        if self.viewer is not None:
-            self.viewer.window.add_dock_widget(InstrumentWidget(self.viewer), area='right', name='Instrument Settings')
+    def onConnectTriggered(self):
+        active_widget = ConnectWidget(self.microscope, self.viewer)
+        docked_widget = self.viewer.window.add_dock_widget(active_widget, area='right', name='Connect')
 
-    def on_scan_controls_triggered(self):
-        if self.viewer is not None:
-            self.viewer.window.add_dock_widget(ScanWidget(self.viewer), area='right', name='Scan Controls')
+        active_widget.microscope_updated.connect(self.onSettingsUpdate)
+    def onStageTriggered(self):
+        if self.microscope is not None:
+            active_widget = StageWidget(self.microscope, self.viewer)
+            docked_widget = self.viewer.window.add_dock_widget(active_widget, area='right', name='Stage')
+        else:
+            logger.warning("Microscope is not initialized")
 
-    def on_experiment_triggered(self):
-        if self.viewer is not None:
-            self.viewer.window.add_dock_widget(ExperimentWidget(), area='right', name='Experiment Settings')
+    def onSettingsUpdate(self, microscope):
+        print("Microscope updated")
+        print(microscope)
+        self.microscope = microscope
+
+
+
+

@@ -235,6 +235,7 @@ def get_widgets(func, viewer):
     _list = []
     signature = inspect.signature(func)
     reserved = ['self','cls', 'viewer', 'parent', 'kwargs', 'args']
+    logger.debug(f'Function signature: {signature}')
     for name, param in signature.parameters.items():
         if name not in reserved:
             label = name.capitalize().replace("_", " ")
@@ -279,6 +280,50 @@ def get_widgets(func, viewer):
                     widget = ItemWidget(label, widget)
             _list.append(WidgetStruct(name, widget))
     return _list
+
+def set_values(widgets, values):
+    for widget in widgets:
+        for key, value in values.items():
+            if widget.name == key:
+                if isinstance(widget.widget, LayerSelectWidget):
+                    widget.widget.combobox_select.setCurrentText(value.name)
+
+                elif isinstance(widget.widget, ObjectSelectWidget):
+                    widget.widget.object_combobox.setCurrentText(value.name)
+
+                elif isinstance(widget, WidgetStruct):
+                    if isinstance(widget.widget.widget, QSpinBox):
+                        widget.widget.widget.setValue(value)
+
+                    elif isinstance(widget.widget.widget, QDoubleSpinBox):
+                        widget.widget.widget.setValue(value)
+
+                    elif isinstance(widget.widget.widget, QLineEdit):
+                        widget.widget.widget.setText(value)
+
+                    elif isinstance(widget.widget.widget, QCheckBox):
+                        widget.widget.widget.setChecked(value)
+
+def connect_widget(widget, func, viewer):
+    logger.debug(type(widget))
+    if isinstance(widget.widget, LayerSelectWidget):
+        widget.widget.combobox_select.currentIndexChanged.connect(func)
+
+    elif isinstance(widget.widget, ObjectSelectWidget):
+        widget.widget.object_combobox.currentIndexChanged.connect(func)
+
+    elif isinstance(widget.widget, ItemWidget):
+        if isinstance(widget.widget.widget, QSpinBox):
+            widget.widget.widget.valueChanged.connect(func)
+
+        elif isinstance(widget.widget.widget, QDoubleSpinBox):
+            widget.widget.widget.valueChanged.connect(func)
+
+        elif isinstance(widget.widget.widget, QLineEdit):
+            widget.widget.widget.textChanged.connect(func)
+
+        elif isinstance(widget.widget.widget, QCheckBox):
+            widget.widget.widget.stateChanged.connect(func)
 
 def get_values(widgets):
     _dict = {}
