@@ -1,5 +1,31 @@
-import logging
-logger = logging.getLogger('tomobase_logger')
+from qtpy.QtCore import QObject, Signal
+
+from tomobase.globals import logger, Item, ItemDict
+
+
+class VariablesDict(ItemDict, QObject):
+    refreshed = Signal()
+
+    def __init__(self, **kwargs):
+        ItemDict.__init__(self, **kwargs)
+        QObject.__init__(self)
+
+    def save():
+        pass
+
+    def delete(self, key):
+        if key in self:
+            del self[key]
+        else:
+            logger.error(f"Key {key} not found in VariablesDict.")
+
+    def rename(self, key, new_name):
+        self[key].name = new_name
+
+    def refresh(self):
+        self.refreshed.emit()
+
+TDTOMONAPARI_VARIABLES = VariablesDict() 
 
 class ModuleRegistration():
     """
@@ -31,10 +57,10 @@ class ModuleRegistration():
                 self._tomobase_available = True
             except ModuleNotFoundError:
                 self._tomobase_available = False
-                logging.error("tomobase module not found.")
+                logger.error("tomobase module not found.")
             except Exception as e:
                 self._tomobase_available = False
-                logging.error(e)
+                logger.error(e)
         self._tomobase_checked = True
         return self._tomobase_available
     
@@ -46,7 +72,7 @@ class ModuleRegistration():
                 self._tomoacquire_available = True
             except Exception as e:
                 self._tomoacquire_available = False
-                logging.error(e)
+                logger.error(e)
         self._tomoacquire_checked = True
         return self._tomoacquire_available
             

@@ -17,6 +17,7 @@ requirements:
     - python >=3.10
     - tomobase
     - napari
+    - coolname
 
 about:
   home: https://github.com/Tcraig088/tdtomonapari
