@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from tomobase.log import logger
 from typing import Union, get_origin, get_args
 from tomobase.data import Data, Sinogram, Image, Volume
-from qtpy.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout,  QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
+from qtpy.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout,  QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
 from tomobase.typehints import TILTANGLETYPE
 from collections.abc import Iterable
 from tomobase.data import Data
@@ -50,25 +50,22 @@ class ItemWidget(QWidget):
             logger.warning(f'Widget {self} has an unsupported type')
             return
 
-
-
 class LayerSelectWidget(CollapsableWidget):
-    def __init__(self, title, layer_types, viewer: 'napari.viewer.Viewer', parent=None):
+    def __init__(self, title, layer_types, viewer: 'napari.viewer.Viewer', isfixed=False, parent=None):
         super().__init__(title, parent)
         
         self.viewer = viewer
         #if iterable
         if get_origin(layer_types) is Union:
             layer_types = get_args(layer_types)
+            self.layer_types = [typ.get_type_id() for typ in layer_types]
         if layer_types is Data:
-            layer_types = []
+            self.layer_types = []
             for key, value in TOMOBASE_DATATYPES.items():
-                layer_types.append(value.name)
+                self.layer_types.append(value.value)
         else:
             layer_types = [layer_types]
-
-
-        self.layer_types = [typ.get_type_id() for typ in layer_types]
+            self.layer_types = [typ.get_type_id() for typ in layer_types]
         self.isfixed = False
 
         self.label_data = QLabel('Selected:')
@@ -94,6 +91,8 @@ class LayerSelectWidget(CollapsableWidget):
         self.viewer.layers.events.removed.connect(self.onLayerNumberChange)
         self.combobox_select.currentIndexChanged.connect(self.onLayerComboboxChange)
         
+        if isfixed:
+            self.linkLayer()
 
     def linkLayer(self):
         self.onLayerSelectChange()
@@ -159,12 +158,12 @@ class LayerSelectWidget(CollapsableWidget):
 
     def Parse(self):
         for layer in self.viewer.layers:
-            if layer.name == self.combobox_select.currentText():
+            if layer.name == self.combobox_select.currentText():#get the index of the layer
+                index = self.viewer.layers.index(layer)
                 layertype_id = layer.metadata['ct metadata']['type']
                 layertype = TOMOBASE_DATATYPES.loc(layertype_id).name
-                logger.info(f'Parsing layer {layertype_id} of type {layertype}')
                 class_ = globals().get(layertype)
-                obj = class_.from_data_tuple(layer)
+                obj = class_.from_data_tuple(index, layer)
                 return obj
 
 class ObjectSelectWidget(CollapsableWidget):
@@ -228,10 +227,50 @@ class ObjectSelectWidget(CollapsableWidget):
             if value.name == name:
                 return value.value
 
+class LayerMultiSelectWidget(CollapsableWidget):
+    def __init__(self, layer_type, viewer,  parent=None):
+        super().__init__('Select Layers:', parent)
+        self._dict = {}
+        self.i = 1
+        self.viewer = viewer
+        self._layout = QGridLayout()
+        self.layer_type = layer_type
+        self.widget_list = []
+        self.button_add = QPushButton('Add')
+        self.button_remove = QPushButton('Remove')
+
+        self.button_add.clicked.connect(self.AddWidget)
+        self.button_remove.clicked.connect(self.removeWidget)
+
+        self._layout.addWidget(self.button_add, 0, 0)
+        self._layout.addWidget(self.button_remove, 0, 1)
+        self.setLayout(self._layout)
+
+    def AddWidget(self):
+        widget = LayerSelectWidget('Layer:', self.layer_type, self.viewer)
+        self.widget_list.append(widget)
+        self._layout.addWidget(widget,self.i,0,1,2)
+        self.i += 1
+
+    def removeWidget(self):
+        if len(self.widget_list) > 0:
+            widget = self.widget_list.pop()
+            self._layout.removeWidget(widget)
+            widget.deleteLater()
+            self.i -= 1
+        else:
+            logger.warning('No widgets to remove')
+
+    def Parse(self):
+        _dict = {}
+        for widget in self.widget_list:
+            name = widget.combobox_select.currentText().lower().replace(" ", "_")
+            _dict[name] = widget.Parse()
+        return _dict
 
 
-
-def get_widgets(func, viewer):
+def get_function_widgets(func, viewer, **kwargs):
+    isfixed = kwargs.get('isfixed', False)
     _list = []
     signature = inspect.signature(func)
     reserved = ['self','cls', 'viewer', 'parent', 'kwargs', 'args']
@@ -239,47 +278,52 @@ def get_widgets(func, viewer):
     for name, param in signature.parameters.items():
         if name not in reserved:
             label = name.capitalize().replace("_", " ")
-            isdefault = True
-
             if param.default == inspect.Parameter.empty:
-                isdefault = False
-
-            if inspect.isclass(param.annotation) and issubclass(param.annotation, Data):
-                widget = LayerSelectWidget(label+":", param.annotation, viewer)
-
-            elif param.annotation == int:
-                widget = QSpinBox()
-                widget.setRange(0, 1000000)
-                if isdefault:
-                    widget.setValue(param.default)
-
-            elif param.annotation == float:
-                widget = QDoubleSpinBox()
-                widget.setRange(-10000000, 1000000)
-                widget.setSingleStep(0.01) 
-                if isdefault:
-                    widget.setValue(param.default)
-
-            elif param.annotation == str:
-                widget = QLineEdit()
-                widget.setText(param.default)
-                if isdefault:
-                    widget.setText(param.default)
-
-            elif param.annotation == bool:
-                widget = QCheckBox()
-                widget.setChecked(param.default)
-                if isdefault:
-                    widget.setChecked(param.default)
-
+                widget = get_widget(name, label, param.annotation, None, viewer, isfixed=isfixed)
             else:
-                widget = ObjectSelectWidget(label+":",param.annotation,viewer)
-
-            if not isinstance(widget, ObjectSelectWidget): 
-                if not isinstance(widget, LayerSelectWidget):
-                    widget = ItemWidget(label, widget)
-            _list.append(WidgetStruct(name, widget))
+                widget = get_widget(name, label, param.annotation, param.default, viewer, isfixed=isfixed)
+            _list.append(widget)
     return _list
+
+def get_widget(name, label, annotation, default=None, viewer=None, **kwargs):
+    isfixed = kwargs.get('isfixed', True)
+    if inspect.isclass(annotation) and issubclass(annotation, Data):
+        widget = LayerSelectWidget(label+":", annotation, viewer, isfixed)
+
+    elif get_origin(annotation) is dict:
+        key_type, value_type = get_args(annotation)
+        widget = LayerMultiSelectWidget( value_type, viewer)
+
+    elif annotation == int:
+        widget = QSpinBox()
+        widget.setRange(0, 1000000)
+        if default is not None:
+            widget.setValue(default)
+
+    elif annotation == float:
+        widget = QDoubleSpinBox()
+        widget.setRange(-10000000, 1000000)
+        widget.setSingleStep(0.01) 
+        if default is not None:
+            widget.setValue(default)
+
+    elif annotation == str:
+        widget = QLineEdit()
+        if default is not None:
+            widget.setText(default)
+
+    elif annotation == bool:
+        widget = QCheckBox()
+        if default is not None:
+            widget.setChecked(default)
+
+    else:
+        widget = ObjectSelectWidget(label+":", annotation, viewer)
+        return
+    
+    if not isinstance(widget, ObjectSelectWidget) and not isinstance(widget, LayerSelectWidget) and not isinstance(widget, LayerMultiSelectWidget):
+        widget = ItemWidget(label, widget)
+    return WidgetStruct(name, widget)
 
 def set_values(widgets, values):
     for widget in widgets:
@@ -303,6 +347,7 @@ def set_values(widgets, values):
 
                     elif isinstance(widget.widget.widget, QCheckBox):
                         widget.widget.widget.setChecked(value)
+                    
 
 def connect_widget(widget, func, viewer):
     logger.debug(type(widget))
@@ -328,7 +373,10 @@ def connect_widget(widget, func, viewer):
 def get_values(widgets):
     _dict = {}
     for widget in widgets:
-        if isinstance(widget.widget, LayerSelectWidget):
+        if isinstance(widget.widget, LayerMultiSelectWidget):
+            _dict[widget.name]= widget.widget.Parse()
+
+        elif isinstance(widget.widget, LayerSelectWidget):
             _dict[widget.name]= widget.widget.Parse()
 
         elif isinstance(widget.widget, ObjectSelectWidget):
