@@ -17,7 +17,7 @@ from tomobase.globals import logger, xp,  TOMOBASE_DATATYPES, progresshandler, G
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 
 from tdtomonapari.napari.base.components import CollapsableWidget, ProgressWidget
-from tdtomonapari.napari.base.utils import get_values, get_widgets, LayerSelectWidget
+from tdtomonapari.napari.base.utils import get_values, get_function_widgets, LayerSelectWidget, LayerMultiSelectWidget
 
 class ProcessWidget(QWidget):
     closed = Signal()
@@ -31,14 +31,15 @@ class ProcessWidget(QWidget):
         self.name = process.name
         self.progress = {}
 
-        self.widget_list = get_widgets(self.process, self.viewer)
-        count = len([item for item in self.widget_list if isinstance(item.widget, LayerSelectWidget)])
-        if count == 1:
-            self.widget_list[0].widget.linkLayer()
+        isfixed=False
+        if not self.process.tomobase_quantification:
+            isfixed=True
+        self.widget_list = get_function_widgets(self.process, self.viewer, isfixed=isfixed)
 
         self.confirm_button = QPushButton('Confirm')
 
         self.layout = QVBoxLayout()
+
         for i, item in enumerate(self.widget_list):
             self.layout.addWidget(item.widget)
 
@@ -76,7 +77,6 @@ class ProcessWidget(QWidget):
         logger.info(f'Process {self.name} started')
         values = get_values(self.widget_list)
 
-
         if 'inplace' not in values:
             self.inplace = False 
         else:
@@ -86,11 +86,16 @@ class ProcessWidget(QWidget):
         for i, item in enumerate(self.widget_list):
             if isinstance(item.widget, LayerSelectWidget):
                 layer_names.append(item.widget.getLayerName())
+            if isinstance(item.widget, LayerMultiSelectWidget):
+                for widget in item.widget.widget_list:
+                    layer_names.append(widget.getLayerName())
        
         self.outputs = self.process(**values)
+        logger.info(f'Process {self.outputs} completed')
         self.layer_indices = LayerSelectWidget.getLayerIndex(self.viewer, layer_names)
 
     def processOutput(self, output, inplace, indices):
+        logger.info(f' output: {output}')
         if isinstance(output, Data):
             output.set_context(GPUContext.NUMPY, 0)
             if inplace:
@@ -105,10 +110,10 @@ class ProcessWidget(QWidget):
                 layerdata = output.to_data_tuple(attributes={'name': name})
                 self.viewer._add_layer_from_data(*layerdata)
         else:
-            name = coolname.generate_slug()
+            name = coolname.generate_slug(2)
             TDTOMONAPARI_VARIABLES[name] = output
             TDTOMONAPARI_VARIABLES.refresh()
-
+ 
         for layer in self.viewer.layers:
             layer.refresh()
 

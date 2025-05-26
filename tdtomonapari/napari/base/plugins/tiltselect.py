@@ -3,7 +3,7 @@ from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout, QSpinBox, QVBoxLayout, QPushButton
 from qtpy.QtCore import Qt, Signal
 import inspect
-from tdtomonapari.napari.base.utils import get_values, get_widgets
+from tdtomonapari.napari.base.utils import get_values, get_function_widgets
 from tomobase.log import logger
 import numpy as np
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
@@ -16,7 +16,7 @@ class TiltSchemeWidget(CollapsableWidget):
         super().__init__()
         self.viewer = viewer
         self.tiltscheme = tiltscheme
-        self.widget_list = get_widgets(self.tiltscheme.__init__, self.viewer)
+        self.widget_list = get_function_widgets(self.tiltscheme.__init__, self.viewer)
 
         self.layout = QVBoxLayout()
         for i, item in enumerate(self.widget_list):

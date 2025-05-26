@@ -14,7 +14,7 @@ from tomoacquire.controllers.controller import TOMOACQUIRE_CONTROLLER
 from tomoacquire.scanwindow import ScanWindow
 from tdtomonapari.napari.base.components import CollapsableWidget
 from tdtomonapari.napari.base.components import CheckableComboBox
-from tdtomonapari.napari.base.utils import get_widgets, get_values
+from tdtomonapari.napari.base.utils import get_function_widgets, get_values
 from tomoacquire import config
 from tomobase.log import logger
 import threading
@@ -26,7 +26,7 @@ class ConnectSettingsWidget(CollapsableWidget):
         self.viewer = viewer
         self.microscope = microscope
         self.isconnected = False
-        self.widget_list = get_widgets(self.microscope.__init__, self.viewer)
+        self.widget_list = get_function_widgets(self.microscope.__init__, self.viewer)
         self.button = QPushButton('Connect')
 
         self.layout = QVBoxLayout()
