@@ -4,6 +4,9 @@ contributions:
     - id: tdtomonapari.start
       title: Continuous Tomography
       python_name: tdtomonapari.napari.main:EntryWidget
+    - id: tdtomonapari.phantom
+      title: Phantom
+      python_name: tdtomonapari.napari.phantoms:load_phantom
     - id: tdtomonapari.nanocage
       title: Nanocage
       python_name: tdtomonapari.napari.phantoms:nanocage
@@ -42,6 +45,9 @@ contributions:
       
 
   sample_data:
+    - key: phantom
+      command: tdtomonapari.phantom
+      display_name: Phantom
     - key: nanocage
       command: tdtomonapari.nanocage
       display_name: Nanocage (Volume)
