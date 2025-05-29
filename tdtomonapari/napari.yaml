@@ -7,15 +7,6 @@ contributions:
     - id: tdtomonapari.phantom
       title: Phantom
       python_name: tdtomonapari.napari.phantoms:load_phantom
-    - id: tdtomonapari.nanocage
-      title: Nanocage
-      python_name: tdtomonapari.napari.phantoms:nanocage
-    - id: tdtomonapari.nanorod
-      title: Nanocage
-      python_name: tdtomonapari.napari.phantoms:nanorod
-    - id: tdtomonapari.nanocage2d
-      title: Nanocage
-      python_name: tdtomonapari.napari.phantoms:nanocage2d
     - id: tdtomonapari.read_sinogram
       title: Read Sinogram
       python_name: tdtomonapari.napari.io:read_sinogram
@@ -43,23 +34,7 @@ contributions:
         - '*.h5'
         - '*.mrc'
       
-
   sample_data:
     - key: phantom
       command: tdtomonapari.phantom
       display_name: Phantom
-    - key: nanocage
-      command: tdtomonapari.nanocage
-      display_name: Nanocage (Volume)
-    - key: nanocage2d
-      command: tdtomonapari.nanocage2d
-      display_name: Nanocage (Sinogram)
-    - key: nanorod
-      command: tdtomonapari.nanorod
-      display_name: Nanorod (Volume)
-    - key: Volume
-      command: tdtomonapari.nanorod
-      display_name: Nanorod (Volume)
-    - key: Sinogram
-      command: tdtomonapari.nanorod
-      display_name: Nanorod (Volume)
