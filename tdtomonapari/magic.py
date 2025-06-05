@@ -9,14 +9,12 @@ from tomobase.globals import TOMOBASE_DATATYPES, TOMOBASE_TILTSCHEMES
 
 from qtpy.QtWidgets import (
     QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel,
-    QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
+    QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit, QWidget
 )
 from qtpy.QtCore import Qt
 
 
 class TiltSelectWidget(QWidget):
-    closed  = Signal()
-
     def __init__(self, title='TiltScheme Select', get_angles=False, viewer=None, parent=None):
         super().__init__(title, parent)
         if viewer is None and parent is not None:
@@ -29,13 +27,15 @@ class TiltSelectWidget(QWidget):
             self.combobox_select.addItem(item.name.replace('_', ' ').capitalize())
         self.combobox_select.currentIndexChanged.connect(self.onComboboxChange)
 
-
         if get_angles:
             self.angles_widget = QSpinBox() 
             self.angles_widget.setRange(0, 1000000)
             self.angles_widget.setValue(70)
             self.tiltscheme_widget = None
         self.confirm_button = QPushButton('Confirm')   
+         
+        self.tiltscheme_widget = QWidget()
+        
 
         self.layout = QGridLayout()
         self.layout.addWidget(QLabel('Select TiltScheme'), 0, 0)
@@ -44,6 +44,8 @@ class TiltSelectWidget(QWidget):
         if get_angles:
             self.layout.addWidget(QLabel('Number of Angles'), 1, 0)
             self.layout.addWidget(self.angles_widget, 1, 1)
+            
+             
         self.layout.addWidget(self.confirm_button, 3, 0, 1, 2)
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)

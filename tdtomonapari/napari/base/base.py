@@ -24,7 +24,7 @@ class TomographyMenuWidget(QMenu):
         tiltmenu = self.addAction("TiltSchemes")
         for key, value in TOMOBASE_TRANSFORM_CATEGORIES.items():
             self.menu[key] = self.addMenu(value.name.replace("_", " ").capitalize())
-            self.traverseMenu2(key, self.menu[key], value.categories)   
+            self.traverseMenu(key, self.menu[key], value.categories)   
 
         
         tiltmenu.triggered.connect(self.onTiltTriggered)
@@ -37,8 +37,8 @@ class TomographyMenuWidget(QMenu):
         active_widget.closed.connect(lambda: self.onCloseWidget(docker_widget))
 
     def onProcessTriggered2(self, widget, name):
+        logger.info(f"Building widget for {name}")
         docker_widget = self.viewer.window.add_dock_widget(widget, name=name, area='right')
-
 
     def traverseMenu(self, base, menu, element):
         for key, value in element.items():
@@ -51,25 +51,7 @@ class TomographyMenuWidget(QMenu):
                 if inspect.isclass(process):
                     widget = ProcessClassWidget
                 else:
-                    widget = ProcessWidget
-
-                def _nested_function(x, y):
-                    return lambda: self.onProcessTriggered(x, y)
-                
-                action.triggered.connect(_nested_function(widget, process))
-
-
-    def traverseMenu2(self, base, menu, element):
-        for key, value in element.items():
-            if isinstance(value, dict):
-                submenu  = menu.addMenu(key)
-                self.traverseMenu(base, submenu, value)
-            else:
-                action = menu.addAction(value)
-                process = TOMOBASE_PROCESSES[base][value.upper().replace(" ", "_")]
-                if inspect.isclass(process):
-                    widget = ProcessClassWidget
-                else:
+                    logger.info(f"Building widget for {process.value}")
                     widget = buildFunctionWidget(process.value, self.viewer)
                     name = process.value.tomobase_name
 
@@ -94,6 +76,9 @@ class TomographyMenuWidget(QMenu):
 def buildFunctionWidget(func, viewer):
     widget = magicgui.magicgui(func, call_button='Run', auto_call=False)
     widget.viewer = viewer
+    
+    logger.info(f"Building widget for {func.__name__}")
+    logger.info(f"Function signature: {inspect.signature(func)}")
 
     @widget.called.connect
     def _run_threaded():
