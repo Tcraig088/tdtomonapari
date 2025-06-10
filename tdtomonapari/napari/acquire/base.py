@@ -1,7 +1,7 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tdtomonapari.napari.acquire.controls import ConnectWidget, buildstagewidget, buildscanwidget
+from tdtomonapari.napari.acquire.controls import ConnectWidget, buildstagewidget, buildscanwidget, build_start_scan_acquire_widget
 from tomobase.log import logger
 
 class AcquistionMenuWidget(QMenu):  
@@ -25,10 +25,17 @@ class AcquistionMenuWidget(QMenu):
 
     def onScanningTriggered(self):
         widget1 = buildscanwidget(self.microscope, isscan=False)
-        docked_widget1 = self.viewer.window.add_dock_widget(widget1, area='right', name='Acquire')
+        docked_widget1 = self.viewer.window.add_dock_widget(widget1, area='right', name='Acquire Settings')
 
         widget2 = buildscanwidget(self.microscope, isscan=True)
-        docked_widget2 = self.viewer.window.add_dock_widget(widget2, area='right', name='Scan')
+        docked_widget2 = self.viewer.window.add_dock_widget(widget2, area='right', name='Scan Settings')
+
+        widget3 = build_start_scan_acquire_widget(self.microscope, viewer=self.viewer)
+        docked_widget3 = self.viewer.window.add_dock_widget(widget3, area='right', name='Start/Acquire')
+
+        main_window = self.viewer.window._qt_window
+        main_window.tabifyDockWidget(docked_widget1, docked_widget2)
+        main_window.tabifyDockWidget(docked_widget1, docked_widget3)
 
     def onConnectTriggered(self):
         active_widget = ConnectWidget(self.microscope, self.viewer)
