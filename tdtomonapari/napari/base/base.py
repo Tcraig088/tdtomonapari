@@ -13,7 +13,8 @@ from tdtomonapari.napari.base.plugins.process import ProcessWidget
 from tdtomonapari.napari.base.plugins.tiltselect import TiltSelectWidget
 from tomobase.data import Data
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
-
+from functools import wraps
+#import tdtomonapari.magic
 
 class TomographyMenuWidget(QMenu):  
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
@@ -39,6 +40,10 @@ class TomographyMenuWidget(QMenu):
     def onProcessTriggered2(self, widget, name):
         logger.info(f"Building widget for {name}")
         docker_widget = self.viewer.window.add_dock_widget(widget, name=name, area='right')
+
+    def onProcessTriggered3(self, process):
+        func = layerdata_wrapper(process)
+        self.viewer.window.add_function_widget()
 
     def traverseMenu(self, base, menu, element):
         for key, value in element.items():
@@ -71,6 +76,35 @@ class TomographyMenuWidget(QMenu):
         docker_widget.setAttribute(Qt.WA_DeleteOnClose)
         active_widget.closed.connect(lambda: self.onCloseWidget(docker_widget))
 
+
+def layerdata_wrapper(func):
+    sig = inspect.signature(func)
+    params = sig.parameters
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
+        new_args = {}
+        for name, value in bound.arguments.items():
+            param = params[name]
+            # Check if the annotation is a subclass of Data
+            annotation = param.annotation
+            if (
+                inspect.isclass(annotation)
+                and issubclass(annotation, Data)
+                and value is not None
+            ):
+                # Assume value is a napari Layer, get the data tuple
+                # You may need to adjust this depending on your LayerData structure
+                if hasattr(value, "metadata") and "ct metadata" in value.metadata:
+                    # If you have a from_data_tuple method:
+                    value = annotation.from_data_tuple(value)
+                elif hasattr(value, "data"):
+                    value = value.data  # fallback: just get the array
+            new_args[name] = value
+        return func(**new_args)
+    return wrapper
 
 
 def buildFunctionWidget(func, viewer):

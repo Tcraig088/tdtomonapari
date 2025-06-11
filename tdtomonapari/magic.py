@@ -5,7 +5,7 @@ from functools import partial
 
 from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from tomobase.data import Data, Sinogram, Volume, Image 
-from tomobase.globals import TOMOBASE_DATATYPES, TOMOBASE_TILTSCHEMES
+from tomobase.globals import TOMOBASE_DATATYPES, TOMOBASE_TILTSCHEMES, logger
 
 from qtpy.QtWidgets import (
     QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel,
@@ -79,13 +79,32 @@ class TiltSelectWidget(QWidget):
         self.close()
         self.closed.emit()
 
+class QWidgetTest(magicgui.widgets.ContainerWidget):
+    def __init__(self, title='Test Widget', parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.label = QLabel('This is a test widget')
+        self.layout.addWidget(self.label)
+
+        self.button = QPushButton('Click Me')
+        self.button.clicked.connect(self.on_button_click)
+        self.layout.addWidget(self.button)
+
+    def on_button_click(self):
+        self.label.setText('Button Clicked!')
+
 class LayerSelectWidget(CollapsableWidget):
-    def __init__(self, title, type_, isfixed=False, viewer=None, parent=None):
-        super().__init__(title, parent)
-        if viewer is None and parent is not None:
+    def __init__(self):
+        super().__init__(title='Layer Select', parent=None)
+        if parent is not None:
             viewer = getattr(parent, "viewer", None)
+        else:
+            viewer = None
         self.viewer = viewer
-        self.isfixed = isfixed
+        self.isfixed = False
 
         if get_origin(type_) is Union:
             type_ = get_args(type_)
@@ -180,7 +199,8 @@ class LayerSelectWidget(CollapsableWidget):
         return [layer_name_to_index.get(name) for name in names]
 
 
-def _from_data_layer(layer):
+def _from_data_layer(*args):
+    layer = args[-1]
     layertype_id = layer.metadata['ct metadata']['type']
     layertype = TOMOBASE_DATATYPES.loc(layertype_id).name
     class_ = globals().get(layertype)
@@ -215,31 +235,34 @@ def layer_widget_factory(annotation=None, options=None, isfixed=False):
 
 
 def build_return_callback():
-    return lambda w: _from_data_layer(w.value)
+    return lambda widget, value: _from_data_layer(widget, value)
 
 
 # ---- Dynamic Registration ----
 # Collect all registered data classes
 _type_classes = []
-for id in TOMOBASE_DATATYPES.values():
-    type_name = TOMOBASE_DATATYPES.loc(id).name
+for key, value in TOMOBASE_DATATYPES.items():
+    logger.info(f"Registering type: {key}")
+    type_name = value.name
     class_ = globals().get(type_name)
     _type_classes.append(class_)
 
 # Register individual types
 for type_ in _type_classes:
+    logger.info(f"Registering type: {type_}")
     magicgui.register_type(
         type_=type_,
-        widget_type=partial(layer_widget_factory, isfixed=False),
-        return_callback=build_return_callback()
+        widget_type=QWidgetTest, #widget_type=partial(layer_widget_factory, isfixed=False),
+        return_callback=_from_data_layer
     )
 
 # Register all Union combinations of 2 or more types
 for r in range(2, len(_type_classes) + 1):
     for combo in combinations(_type_classes, r):
         union_type = _flat_union(*combo)
+        logger.info(f"Registering type: {union_type}")
         magicgui.register_type(
             type_=union_type,
-            widget_type=partial(layer_widget_factory, isfixed=False),
-            return_callback=build_return_callback()
+            widget_type=QWidgetTest,
+            return_callback=_from_data_layer
         )

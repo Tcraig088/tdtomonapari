@@ -9,7 +9,7 @@ from tdtomonapari.napari.gpu import ContextWidget
 
 from tdtomonapari.registration import TDTOMO_NAPARI_MODULE_REGISTRATION
 from tdtomonapari.napari.base.base import TomographyMenuWidget
-
+#import tdtomonapari.magic
 
 from tomobase.globals import logger
 if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
