@@ -9,12 +9,12 @@ from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 from functools import partial
 from tomobase.globals import logger, TOMOBASE_PROCESSES, TOMOBASE_TRANSFORM_CATEGORIES, GPUContext
-from tdtomonapari.napari.base.plugins.process import ProcessWidget 
+from tdtomonapari.napari.base.plugins.process import ProcessWidget, MagicProcessWidget
 from tdtomonapari.napari.base.plugins.tiltselect import TiltSelectWidget
 from tomobase.data import Data
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 from functools import wraps
-#import tdtomonapari.magic
+
 
 class TomographyMenuWidget(QMenu):  
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
@@ -37,13 +37,12 @@ class TomographyMenuWidget(QMenu):
         docker_widget.setAttribute(Qt.WA_DeleteOnClose)
         active_widget.closed.connect(lambda: self.onCloseWidget(docker_widget))
 
-    def onProcessTriggered2(self, widget, name):
-        logger.info(f"Building widget for {name}")
+    def onProcessTriggered2(self, process):
+        widget = buildFunctionWidget(process.value, self.viewer)
+        name = process.name
         docker_widget = self.viewer.window.add_dock_widget(widget, name=name, area='right')
 
-    def onProcessTriggered3(self, process):
-        func = layerdata_wrapper(process)
-        self.viewer.window.add_function_widget()
+
 
     def traverseMenu(self, base, menu, element):
         for key, value in element.items():
@@ -56,14 +55,12 @@ class TomographyMenuWidget(QMenu):
                 if inspect.isclass(process):
                     widget = ProcessClassWidget
                 else:
-                    logger.info(f"Building widget for {process.value}")
-                    widget = buildFunctionWidget(process.value, self.viewer)
-                    name = process.value.tomobase_name
+                    pass
 
-                def _nested_function(x, y):
-                    return lambda: self.onProcessTriggered2(x, y)
+                def _nested_function(x):
+                    return lambda: self.onProcessTriggered2(x)
                 
-                action.triggered.connect(_nested_function(widget, name))
+                action.triggered.connect(_nested_function(process))
 
     def onCloseWidget(self, widget):
         widget.close()
@@ -77,47 +74,20 @@ class TomographyMenuWidget(QMenu):
         active_widget.closed.connect(lambda: self.onCloseWidget(docker_widget))
 
 
-def layerdata_wrapper(func):
-    sig = inspect.signature(func)
-    params = sig.parameters
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
-        new_args = {}
-        for name, value in bound.arguments.items():
-            param = params[name]
-            # Check if the annotation is a subclass of Data
-            annotation = param.annotation
-            if (
-                inspect.isclass(annotation)
-                and issubclass(annotation, Data)
-                and value is not None
-            ):
-                # Assume value is a napari Layer, get the data tuple
-                # You may need to adjust this depending on your LayerData structure
-                if hasattr(value, "metadata") and "ct metadata" in value.metadata:
-                    # If you have a from_data_tuple method:
-                    value = annotation.from_data_tuple(value)
-                elif hasattr(value, "data"):
-                    value = value.data  # fallback: just get the array
-            new_args[name] = value
-        return func(**new_args)
-    return wrapper
-
-
 def buildFunctionWidget(func, viewer):
-    widget = magicgui.magicgui(func, call_button='Run', auto_call=False)
-    widget.viewer = viewer
-    
+    widget = MagicProcessWidget(func, viewer)
+
     logger.info(f"Building widget for {func.__name__}")
     logger.info(f"Function signature: {inspect.signature(func)}")
 
-    @widget.called.connect
+
+    return widget
+    """
+        @widget.called.connect
     def _run_threaded():
-        # Capture inputs here before running
-        args = {name: getattr(widget, name).value for name in widget._function.__code__.co_varnames[:widget._function.__code__.co_argcount]}
+        # ✅ Use MagicGUI's value resolution (this uses return_callback properly!)
+        args = {name: widget[name] for name in inspect.signature(func).parameters}
+
         start_time = time.perf_counter()
 
         @thread_worker
@@ -125,9 +95,9 @@ def buildFunctionWidget(func, viewer):
             return func(**args)
 
         def onComplete(result):
-            # parseResult must be your external result processor
             if not isinstance(result, tuple):
-                result = [result]
+                result = (result,)
+
             for item in result:
                 if isinstance(item, Data):
                     item.set_context(GPUContext.NUMPY, 0)
@@ -140,22 +110,4 @@ def buildFunctionWidget(func, viewer):
                         name = coolname.generate_slug(2).replace('-', ' ').title().replace(' ', '')
                         layerdata = item.to_data_tuple(attributes={'name': name})
                         viewer._add_layer_from_data(*layerdata)
-                else:
-                    name = coolname.generate_slug(2)
-                    TDTOMONAPARI_VARIABLES[name] = item
-                    TDTOMONAPARI_VARIABLES.refresh()
-
-            elapsed = time.perf_counter() - start_time
-            hours, remainder = divmod(elapsed, 3600)
-            minutes, seconds = divmod(remainder, 60)
-            logger.info(
-                f"{getattr(widget, 'tomobase_name', func.__name__)} Completed - "
-                f"Elapsed time: {int(hours):02}:{int(minutes):02}:{int(seconds):02}"
-            )
-
-        worker = _run()
-        worker.returned.connect(onComplete)
-        worker.start()
-
-    return widget
-
+    """

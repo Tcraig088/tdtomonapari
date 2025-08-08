@@ -4,7 +4,6 @@ import napari
 def read_sinogram(path):
     return read_to_viewer
 
-
 def read_to_viewer(path):
     sino = Sinogram.from_file(path)
     name = path.split('/')[-1]
@@ -18,6 +17,9 @@ def read_to_viewer(path):
     return layer
 
 def write_sinogram(path, layerdata, attributes):
-    sino = Sinogram.from_data_tuple(layerdata, attributes)
+    sino = Sinogram.from_data_tuple(0 ,layerdata, attributes)
     sino.to_file(path)
     return path
+
+def read_vmf(path):
+    return read_to_viewer

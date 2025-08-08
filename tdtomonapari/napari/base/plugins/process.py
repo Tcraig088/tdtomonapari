@@ -18,6 +18,153 @@ from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 
 from tdtomonapari.napari.base.components import CollapsableWidget, ProgressWidget
 from tdtomonapari.napari.base.utils import get_values, get_function_widgets, LayerSelectWidget, LayerMultiSelectWidget
+import magicgui
+from magicgui.widgets import Container, ComboBox, Label
+from typing import Union, get_origin
+
+from tomobase.data import Data
+
+def check_magicgui_type(tp):
+    try:
+        return_type = magicgui.type_map.get_widget_class(annotation=tp)
+        return True
+    except Exception as e:
+        return False
+    
+class MagicProcessWidget(QWidget):
+    def __init__(self, process, viewer: 'napari.viewer.Viewer', parent=None):
+        super().__init__(parent)
+        self.viewer = viewer
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        signature = inspect.signature(process)
+        self._filters = {}
+        self._data_args ={}
+
+        for name, param in signature.parameters.items():
+            self.getFilters(name, param.annotation)
+        
+        for key, value in self._filters.items():
+            if key not in self._data_args:
+                self._data_args[key] = {"choices": self.getOptions(key)}
+                self._data_args[key]["widget_type"] = ComboBox
+
+
+        logger.info(self._data_args)
+        self.widget = magicgui.magicgui(process, call_button='Run', auto_call=False, **self._data_args)
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.widget.native)
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+        self.widget.call_button.changed.connect(self.runThreadWorker)
+
+        self.viewer.layers.events.inserted.connect(self.updateOptions)
+        self.viewer.layers.events.removed.connect(self.updateOptions)
+
+    def updateOptions(self):
+        for key, value in self._data_args.items():
+            options = self.getOptions(key)
+            widget = getattr(self.widget, key)
+            widget.choices = [] 
+            widget.choices = options
+            self._data_args[key]["choices"] = options
+
+    def getFilters(self, name, annotation):
+        if get_origin(annotation) is Union:
+            for item in annotation.__args__:
+                self.getFilters(name, item)
+
+        elif issubclass(annotation, Data):
+            self.getFilter(name, annotation)
+        #check if annotation is in magicgui
+        elif not check_magicgui_type(annotation):
+            self.getFilter(name, annotation)
+
+    def getFilter(self, name, annotation):
+        if name not in self._filters:
+            self._filters[name] = []
+
+        self._filters[name].append((annotation.__name__, annotation))
+        #{"choices": self.getOptions(annotation)}
+        return 
+
+    def getOptions(self, name):
+        selection = self._filters[name][0][1]
+        logger.debug(f'Getting options for {name} of type {selection}')
+        if issubclass(selection, Data):
+            return self.getDataOptions(selection)
+        elif not check_magicgui_type(selection):
+            return self.getWorkSpaceOptions(selection)
+        else:
+            logger.error(f"Unsupported data type {name} for parameter {name}. No options available.")
+
+    def getDataOptions(self, selection, options=[]):
+        for layer in self.viewer.layers:
+            if 'ct metadata' in layer.metadata:
+                type_id = layer.metadata['ct metadata']['type']
+                class_ = TOMOBASE_DATATYPES.get_class(type_id)
+                if issubclass(class_, selection):
+                    options.append((layer.name, class_.from_data_tuple(layer)))
+        return options
+    
+    def getWorkSpaceOptions(self, selection, options=[]):
+        logger.debug(f'Getting workspace options for {selection}')
+        for name, obj in TDTOMONAPARI_VARIABLES.items():
+            logger.debug(f'Checking {name} of type {type(obj)} against {selection}')
+            if issubclass(type(obj.value), selection):
+                options.append((name, obj.value))
+        return options
+
+    def runThreadWorker(self):
+        logger.info(f'Process {self.widget.name} started')
+        worker = create_worker(self.widget)
+        worker.returned.connect(self.onComplete)
+        worker.start()
+
+    def onComplete(self, output):
+        """Handle the output of the process"""
+        logger.info(f'Process {self.widget.name} completed with output: {output}')
+
+        if isinstance(output, tuple):
+            for item in output:
+                if issubclass(item, Data):
+                    self.parseDataClass(item)
+                else:
+                    self.parseWorkSpace(item)
+        elif isinstance(output, Data):
+            self.parseDataClass(output)
+        else:
+            self.parseWorkSpace(output)
+
+        for layer in self.viewer.layers:
+            layer.refresh()
+
+        #close the widget
+        self.widget.call_button.changed.disconnect(self.runThreadWorker)
+        self.close()
+        
+    def parseWorkSpace(self, obj):
+        name = coolname.generate_slug(2)
+        TDTOMONAPARI_VARIABLES[name] = obj
+        TDTOMONAPARI_VARIABLES.refresh()
+ 
+    def parseDataClass(self, obj):
+        if self.widget.inplace.value:
+            if isinstance(obj, Data):
+                obj.set_context(GPUContext.NUMPY, 0)
+                #get the first key in self._data_args
+                layerdata = obj.to_data_tuple()
+                name = layerdata[1]['name']
+                self.viewer.layers[name].data = layerdata[0]
+                self.viewer.layers[name].metadata = layerdata[1]['metadata']
+                self.viewer.layers[name].scale = layerdata[1]['scale']
+        else:
+            if isinstance(obj, Data):
+                obj.set_context(GPUContext.NUMPY, 0)
+                layerdata = obj.to_data_tuple(attributes={'name': coolname.generate_slug(2).replace('-', ' ').title().replace(' ', '')})
+                self.viewer._add_layer_from_data(*layerdata)
 
 class ProcessWidget(QWidget):
     closed = Signal()

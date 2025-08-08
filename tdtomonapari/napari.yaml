@@ -26,6 +26,13 @@ contributions:
         - '*.mat'
       accepts_directories: false
 
+    - command: tdtomonapari.read_volumeseries
+      layer_types:
+        - image
+      filename_extensions:
+        - '*.vmf'
+      display_name: Read Volume Time Series
+      
   writers:
     - command: tdtomonapari.write_sinogram
       layer_types:
