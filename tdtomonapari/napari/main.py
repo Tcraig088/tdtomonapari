@@ -59,8 +59,8 @@ class EntryWidget(QWidget):
     def addLayerInfoWidget(self):
         self.viewer.window.add_dock_widget(LayerInfo(self.viewer), name='Layer Info', area='right')
 
-    #def addVariablesWidget(self):
-    #    self.viewer.window.add_dock_widget(VariablesWidget(self.viewer), name='Workspace', area='left')
+    def addVariablesWidget(self):
+        self.viewer.window.add_dock_widget(VariablesWidget(self.viewer), name='Workspace', area='left')
 
     def addVariablesWidget(self):
 

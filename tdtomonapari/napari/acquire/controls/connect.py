@@ -6,8 +6,8 @@ import json
 import os
 import numpy as np
 import copy
-from tomoacquire.registrations import TOMOACQUIRE_MICROSCOPES
-from tomoacquire.microscopes.temscript import TEMScriptMicroscope
+#from tomoacquire.registrations import TOMOACQUIRE_MICROSCOPES
+#from tomoacquire.microscopes.temscript import TEMScriptMicroscope
 from tomobase import TOMOBASE_DATATYPES
 from tomoacquire.states import MicroscopeState
 from tomoacquire.controllers.controller import TOMOACQUIRE_CONTROLLER

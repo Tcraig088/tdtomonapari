@@ -1,11 +1,47 @@
 from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
-from tdtomonapari.napari.acquire.controls import ConnectWidget, buildstagewidget, buildscanwidget, build_start_scan_acquire_widget
+#from tdtomonapari.napari.acquire.controls import ConnectWidget, buildstagewidget, buildscanwidget, build_start_scan_acquire_widget
 from tomobase.log import logger
+from tdtomonapari.napari.acquire.devices.new import MagicNewDeviceWidget
 
 class AcquistionMenuWidget(QMenu):  
     def __init__(self, viewer = None ,parent=None):
+        super().__init__("Acquisition",parent)
+        self.viewer = viewer
+        self.actions = {}
+        self.menu = {}
+
+        self.menu['Device Management'] = self.addMenu("Device Management")
+        self.menu['Device Controls'] = self.addMenu("Device Controls")
+        self.menu['Experiments'] = self.addMenu("Experiments")
+        
+        self.menu['Register Device'] = self.menu['Device Management'].addAction("Register Device")
+        self.menu['New Device'] = self.menu['Device Management'].addAction("Edit Device")
+        self.menu['Edit Device'] = self.menu['Device Management'].addAction("New Device")
+        self.menu['Connect'] = self.menu['Device Management'].addAction("Connect")
+        self.menu['Disconnect'] = self.menu['Device Management'].addAction("Disconnect")
+        
+        # add actions triggers to the menu items use dummy functions for now
+        self.menu['Register Device'].triggered.connect(self.NewDevice)
+        self.menu['New Device'].triggered.connect(lambda: logger.info("New Device clicked"))
+        self.menu['Edit Device'].triggered.connect(lambda: logger.info("Edit Device clicked"))
+        self.menu['Connect'].triggered.connect(lambda: logger.info("Connect clicked"))
+        self.menu['Disconnect'].triggered.connect(lambda: logger.info("Disconnect clicked"))
+
+    def NewDevice(self):
+        # close device if widget closes
+        widget = MagicNewDeviceWidget(self.viewer)
+        dock_widget = self.viewer.window.add_dock_widget(widget, area='right', name='New Device')
+        widget.closed.connect(lambda: self.closeWidget(dock_widget))
+
+
+    def closeWidget(self, widget):
+        """Close the widget and remove it from the viewer."""
+        widget.close()
+
+        """_summary_
+        
         super().__init__("Acquisition", parent)
         self.actions = {}
         self.viewer = viewer
@@ -54,6 +90,6 @@ class AcquistionMenuWidget(QMenu):
         print(microscope)
         self.microscope = microscope
 
-
+    """
 
 
