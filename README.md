@@ -6,38 +6,51 @@
 ![Testing](https://img.shields.io/badge/test-Experimental-orange)
 ![build](https://img.shields.io/badge/tested%20build-Windows%2011%20|%20Ubuntu%2024.04-orange)
 
-## Table of Contents
+## Description
 
- - **Overview**
-   - [**Section 1. Description**](#1-description)
-   - [**Section 2. Installation**](#2-installation)
-   - [**Section 3. Usage**](#3-usage)
-   - [**Section 3. Usage**](#4-license)
-  
-## 1. Description
-
-The Time-Dependent Tomography Napari Plugin (tdtomonapari) is a Napari plugin allowing the usage of a number of python libraries for scanning transmission electron tomography (STEM) with time-resolution in Napari. It is part of the [Time-Depenedent Tomography](https://google.co.nz) Library. As a Napari plugin it is the only library in the project that does not have extensive APIs for usage in a Juypter Notebook. The library is intended for providing a hook for create a Napari gui for the following libraries.
+This package is a Napari plugin allowing the usage of a number of python libraries for scanning transmission electron tomography (STEM) with time-resolution in Napari. The library is intended for providing a hook for create a Napari gui for the following libraries.
 
 1. [**TomoBase:**](https://google.co.nz) A base library for common tomography tasks such as alignment, reconstruction and post processing.
 2. [**TomoAcquire:**](https://google.co.nz) A library for connecting to the microscope and acquiring tomography data.
 3. [**TomoNDT:**](https://google.co.nz) A library for GPU accelerated processing of volume-time data with support for BLOSC compressed data storage.
 
 
-## 2. Installation
+## nstallation
 
-This library can be installed independently of all other projects except tomobase. Unlike other libraries this one is dependent on backend gui support. Hence, either  [PyQt5](https://google.co.nz) **or** [PySide2](https://google.co.nz) must be installed with it. For conda installation, run the following in your environment (replace X.X with the Cuda Toolkit Version supported by your device):
+This library can be installed independently of all other projects except tomobase. Unlike other libraries this one is dependent on backend gui support. Follow the instructions for the installation of (Tomo Base)[https://tomobase.readthedocs.io/en/latest/] and install Napari before installing the library. TomoAcquire and TomoNDT can be installed optionally
 
 
 ```bash
-conda install tdtomonapari cudatoolkit=X.X pyqt -c TCraig088 -c conda-forge
+conda install napari -c conda-forge
+pip install -e . 
 ```
 
-Equally, the tdtomonapari can be installed through the Napari Plugins Market.
+## Usage
+All data classes inherited from Tomo Base support viewing as a napari layer using the to_data_tuple() and from_data_tuple() methods.
 
-## 3. Usage
-To use the library open Napari and Select Time-Dependent Tomography from the plugins window. 
 
-## 4. License
+```python
+import tomobase.data as data
+import tomobase.phantoms as phantoms
+import napari
+
+# Initialize Viewer
+viewer = napari.Viewer()
+
+#get volume and convert tot layer tuple
+vol = phantoms.get_nanocage()
+data_tuple = vol.to_data_tuple()
+
+viewer.add_image(data_tuple[0], data_tuple[1])
+
+#export Volume from napari layer
+vol2 = data.Volume.from_data_tuple(napari.layers[0])
+
+```
+
+To use with the napari browser. Open "Continous Tomography" in plugins this will create a Continous Tomography menu in the toolbar with access to all functions in the supported libraries 
+
+## License
 This code is licensed under GNU general public license version 3.0.
 
 
