@@ -1,6 +1,11 @@
 import napari
-from qtpy.QtWidgets import QWidget, QVBoxLayout, QMenu, QAction, QDockWidget
+import magicgui
+
+from qtpy.QtWidgets import QWidget, QVBoxLayout, QMenu, QAction, QDockWidget, QLabel
 from qtpy.QtCore import Qt
+
+
+from .utils import _buildcontextwidget, _buildlayerinfowidget, _buildworkspacewidget
 
 from tdtomonapari.napari.log import LogWidget
 from tdtomonapari.napari.layer import LayerInfo
@@ -15,6 +20,52 @@ from tomobase.globals import logger
 if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
     import tomoacquire
     from tdtomonapari.napari.acquire.base import AcquistionMenuWidget
+
+
+@magicgui.magicgui(call_button='Setup Menu')
+def buildmenu_gui():
+    viewer = napari.current_viewer()
+    menu = QMenu('Continuous Tomography', viewer.window.main_menu)  # explicit parent
+    viewer.window.main_menu.addMenu(menu)
+    
+    submenu = menu.addMenu('Utilities')
+    
+    action = QAction('Context', submenu)
+    submenu.addAction(action)
+    action.triggered.connect(lambda x: _buildcontextwidget(viewer))
+    _buildcontextwidget(viewer)
+    
+    action = QAction('Layer Info', submenu)
+    submenu.addAction(action)
+    action.triggered.connect(lambda x: _buildlayerinfowidget(viewer))
+    _buildlayerinfowidget(viewer)
+    
+    action = QAction('Layer Info', submenu)
+    submenu.addAction(action)
+    action.triggered.connect(lambda x: _buildlayerinfowidget(viewer))
+    _buildworkspacewidget(viewer)
+
+    menu.addMenu('Acquisition')
+    
+    submenu = menu.addMenu('Tomography')
+    submenu = _buildtomomenu(viewer, submenu)
+    
+    
+    menu.addMenu('Time Dependent Tomography')
+
+    viewer.window.remove_dock_widget(buildmenu_gui.native)
+    return 
+
+def _buildmenu():
+    note = QLabel("Welcome to the Continuous Tomography Module")
+    buildmenu_gui.native.layout().insertWidget(0, note)
+    return buildmenu_gui  # return the FunctionGui object itself
+
+
+    
+
+
+
     
 class EntryWidget(QWidget):    
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):

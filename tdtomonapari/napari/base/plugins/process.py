@@ -12,17 +12,17 @@ from qtpy.QtCore import Qt, Signal
 from threading import Thread
 from napari.qt.threading import create_worker
 
-from tomobase.data import Volume, Sinogram, Data
-from tomobase.globals import logger, xp,  TOMOBASE_DATATYPES, progresshandler, GPUContext
+from tomobase.data import Volume, Sinogram, BaseImageModel
+from tomobase.globals import logger, proxy,  image_datatypes_register, GPUContext
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 
-from tdtomonapari.napari.base.components import CollapsableWidget, ProgressWidget
+from tdtomonapari.napari.base.components import CollapsableWidget
 from tdtomonapari.napari.base.utils import get_values, get_function_widgets, LayerSelectWidget, LayerMultiSelectWidget
 import magicgui
 from magicgui.widgets import Container, ComboBox, Label
 from typing import Union, get_origin
 
-from tomobase.data import Data
+from tomobase.data import BaseImageModel
 
 def check_magicgui_type(tp):
     try:
@@ -76,7 +76,7 @@ class MagicProcessWidget(QWidget):
             for item in annotation.__args__:
                 self.getFilters(name, item)
 
-        elif issubclass(annotation, Data):
+        elif issubclass(annotation, BaseImageModel):
             self.getFilter(name, annotation)
         #check if annotation is in magicgui
         elif not check_magicgui_type(annotation):
@@ -93,7 +93,7 @@ class MagicProcessWidget(QWidget):
     def getOptions(self, name):
         selection = self._filters[name][0][1]
         logger.debug(f'Getting options for {name} of type {selection}')
-        if issubclass(selection, Data):
+        if issubclass(selection, BaseImageModel):
             return self.getDataOptions(selection)
         elif not check_magicgui_type(selection):
             return self.getWorkSpaceOptions(selection)
@@ -104,7 +104,7 @@ class MagicProcessWidget(QWidget):
         for layer in self.viewer.layers:
             if 'ct metadata' in layer.metadata:
                 type_id = layer.metadata['ct metadata']['type']
-                class_ = TOMOBASE_DATATYPES.get_class(type_id)
+                class_ = image_datatypes_register.get_class(type_id)
                 if issubclass(class_, selection):
                     options.append((layer.name, class_.from_data_tuple(layer)))
         return options
@@ -129,11 +129,11 @@ class MagicProcessWidget(QWidget):
 
         if isinstance(output, tuple):
             for item in output:
-                if issubclass(item, Data):
+                if issubclass(item, BaseImageModel):
                     self.parseDataClass(item)
                 else:
                     self.parseWorkSpace(item)
-        elif isinstance(output, Data):
+        elif isinstance(output, BaseImageModel):
             self.parseDataClass(output)
         else:
             self.parseWorkSpace(output)
@@ -152,7 +152,7 @@ class MagicProcessWidget(QWidget):
  
     def parseDataClass(self, obj):
         if self.widget.inplace.value:
-            if isinstance(obj, Data):
+            if isinstance(obj, BaseImageModel):
                 obj.set_context(GPUContext.NUMPY, 0)
                 #get the first key in self._data_args
                 layerdata = obj.to_data_tuple()
@@ -161,7 +161,7 @@ class MagicProcessWidget(QWidget):
                 self.viewer.layers[name].metadata = layerdata[1]['metadata']
                 self.viewer.layers[name].scale = layerdata[1]['scale']
         else:
-            if isinstance(obj, Data):
+            if isinstance(obj, BaseImageModel):
                 obj.set_context(GPUContext.NUMPY, 0)
                 layerdata = obj.to_data_tuple(attributes={'name': coolname.generate_slug(2).replace('-', ' ').title().replace(' ', '')})
                 self.viewer._add_layer_from_data(*layerdata)
@@ -243,7 +243,7 @@ class ProcessWidget(QWidget):
 
     def processOutput(self, output, inplace, indices):
         logger.info(f' output: {output}')
-        if isinstance(output, Data):
+        if isinstance(output, BaseImageModel):
             output.set_context(GPUContext.NUMPY, 0)
             if inplace:
                 index = indices[0]
@@ -372,10 +372,10 @@ class ProcessWidget2(QWidget):
         self.selected_layer = self.selected_widget.getLayer()
         
         if self.selected_layer is not None:
-            if self.selected_layer.metadata['ct metadata']['type'] == TOMOBASE_DATATYPES.VOLUME.value():
+            if self.selected_layer.metadata['ct metadata']['type'] == image_datatypes_register.VOLUME.value():
                 input = Volume.from_data_tuple(self.selected_layer)  
                 dict_args = {'vol':input}
-            elif self.selected_layer.metadata['ct metadata']['type'] == TOMOBASE_DATATYPES.SINOGRAM.value():
+            elif self.selected_layer.metadata['ct metadata']['type'] == image_datatypes_register.SINOGRAM.value():
                 input = Sinogram.from_data_tuple(self.selected_layer)
                 dict_args = {'sino':input}
                 
@@ -424,7 +424,7 @@ class ProcessWidget2(QWidget):
             
             i = 0
             for item in output:
-                if isinstance(item, Data):
+                if isinstance(item, BaseImageModel):
                     if self.inplace:
                         layerdata = item.to_data_tuple(attributes={'name': self.name})
                         self.selected_layers[i].data = layerdata[0]
@@ -454,7 +454,7 @@ class ProcessWidget2(QWidget):
             if self.custom_widgets['Label'][i] == 'Layer':
                 self.selected_layers.append(values[key])
                 layertype_id = values[key].metadata['ct metadata']['type']
-                layertype = TOMOBASE_DATATYPES.key(layertype_id).capitalize()
+                layertype = image_datatypes_register.key(layertype_id).capitalize()
                 class_ = globals().get(layertype)
                 values[key] = class_.from_data_tuple(values[key])
                 

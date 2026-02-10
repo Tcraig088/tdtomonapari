@@ -1,8 +1,11 @@
 name: tdtomonapari
 contributions:
   commands:
+    - id: tdtomonapari.run
+      title: Run
+      python_name: tdtomonapari.napari.main:_buildmenu
     - id: tdtomonapari.start
-      title: Continuous Tomography
+      title: "Continuous Tomography/Stuff"
       python_name: tdtomonapari.napari.main:EntryWidget
     - id: tdtomonapari.phantom
       title: Phantom
@@ -16,7 +19,11 @@ contributions:
 
   widgets:
     - command: tdtomonapari.start
-      display_name: Continuous Tomography
+      display_name: "Continuous Tomography/Stuff"
+    - command: tdtomonapari.run
+      display_name: "Run"
+
+
 
   readers:
     - command: tdtomonapari.read_sinogram

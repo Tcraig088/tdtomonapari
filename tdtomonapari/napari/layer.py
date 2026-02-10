@@ -1,4 +1,4 @@
-from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
+from tomobase.registrations.datatypes import image_datatypes_register
 
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QLabel, QCheckBox, QComboBox, QGridLayout
 from qtpy.QtCore import Qt
@@ -42,7 +42,7 @@ class LayerInfo(QWidget):
             if 'ct metadata' not in layer.metadata:
                 self.label_layer_type_value.setText("Not Supported")
             else:
-                self.label_layer_type_value.setText(TOMOBASE_DATATYPES.key(layer.metadata['ct metadata']['type']))
-                self.widget = TOMOBASE_DATATYPES.loc(layer.metadata['ct metadata']['type']).widget(self.viewer, self)
+                self.label_layer_type_value.setText(image_datatypes_register.key(layer.metadata['ct metadata']['type']))
+                self.widget = image_datatypes_register.loc(layer.metadata['ct metadata']['type']).widget(self.viewer, self)
                 self.layout.addWidget(self.widget, 2, 0, 1, 2)
         

@@ -1,4 +1,4 @@
-from tomobase.registrations.tiltschemes import TOMOBASE_TILTSCHEMES
+from tomobase.registrations.tiltschemes import tiltschemes_register
 from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout, QSpinBox, QVBoxLayout, QPushButton
 from qtpy.QtCore import Qt, Signal
@@ -37,7 +37,7 @@ class TiltSelectWidget(QWidget):
         self.get_angles = get_angles
         self.combobox_select = QComboBox()
         self.combobox_select.addItem('Select TiltScheme')
-        for key, item in TOMOBASE_TILTSCHEMES.items():
+        for key, item in tiltschemes_register.items():
             self.combobox_select.addItem(item.name.replace('_', ' ').capitalize())
 
         self.combobox_select.currentIndexChanged.connect(self.onComboboxChange)
@@ -68,7 +68,7 @@ class TiltSelectWidget(QWidget):
             self.tiltscheme_widget = None
 
         if self.combobox_select.currentIndex() > 0:
-            self.tiltscheme = TOMOBASE_TILTSCHEMES[self.combobox_select.currentText().upper().replace(' ', '_')].value
+            self.tiltscheme = tiltschemes_register[self.combobox_select.currentText().upper().replace(' ', '_')].value
             self.tiltscheme_widget = TiltSchemeWidget(self.tiltscheme, self.viewer)
             self.layout.addWidget(self.tiltscheme_widget, 2, 0, 1, 2)
             self.tiltscheme_widget.show()

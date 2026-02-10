@@ -2,7 +2,7 @@ from functools import partial
 from typing import List
 from napari.types import LayerData
 from tomobase.log import logger
-from tomobase.globals import TOMOBASE_PHANTOMS
+from tomobase.globals import phantoms_register
 from napari.qt.threading import thread_worker
 import time
 from tomobase.tiltschemes import GRS, Incremental
@@ -26,7 +26,7 @@ class PhantomSelectWidget(QDialog):
         self.phantom_select = QComboBox()
         self.phantom_select.addItem('Select Phantom')
 
-        for key, item in TOMOBASE_PHANTOMS.items():
+        for key, item in phantoms_register.items():
             self.phantom_select.addItem(item.name.replace('_', ' ').capitalize())
         
         self.type_select = QComboBox()
@@ -53,7 +53,7 @@ class PhantomSelectWidget(QDialog):
 
         if self.phantom_select.currentIndex() > 0:
             logger.info(f"Selected phantom: {self.phantom_select.currentText()}")
-            process = TOMOBASE_PHANTOMS[self.phantom_select.currentText().replace(' ', '_').upper()]  
+            process = phantoms_register[self.phantom_select.currentText().replace(' ', '_').upper()]  
             phantom = build_phantoms_widget(process.value)
             self.phantom_widget = phantom.native
             phantom.called.connect(self.Parse)

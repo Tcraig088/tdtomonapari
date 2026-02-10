@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
-from tomobase.globals import logger, xp, GPUContext
+from tomobase.globals import logger, proxy, GPUContext
 
 class ContextWidget(QWidget):
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
@@ -15,15 +15,15 @@ class ContextWidget(QWidget):
         self.label_context = QLabel("Context:")
         self.combobox_context = QComboBox()
         self.combobox_context.addItem(GPUContext.NUMPY.name.capitalize())
-        if xp._cupy_available:
+        if proxy._cupy_available:
             self.combobox_context.addItem(GPUContext.CUPY.name.capitalize())
-        self.combobox_context.setCurrentText(xp.context.name.capitalize())
+        self.combobox_context.setCurrentText(proxy.context.name.capitalize())
 
         self.label_device = QLabel("Device:")
         self.combobox_device = QComboBox()
-        for i in range(xp.device_count):
+        for i in range(proxy.device_count):
             self.combobox_device.addItem(str(i))
-        self.combobox_device.setCurrentText(str(xp.device))
+        self.combobox_device.setCurrentText(str(proxy.device))
 
         self._layout.addWidget(self.label_context)
         self._layout.addWidget(self.combobox_context)
@@ -39,5 +39,5 @@ class ContextWidget(QWidget):
     def onContextChanged(self, value):
         context = GPUContext[self.combobox_context.currentText().upper()]
         device = int(self.combobox_device.currentText())
-        xp.set_context(context, device)
+        proxy.set_context(context, device)
  

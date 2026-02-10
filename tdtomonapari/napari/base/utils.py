@@ -4,12 +4,11 @@ from dataclasses import dataclass
 
 from tomobase.log import logger
 from typing import Union, get_origin, get_args
-from tomobase.data import Data, Sinogram, Image, Volume
+from tomobase.data import BaseImageModel, Sinogram, Image, Volume
 from qtpy.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout,  QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
-from tomobase.typehints import TILTANGLETYPE
 from collections.abc import Iterable
-from tomobase.data import Data
-from tomobase.registrations.datatypes import TOMOBASE_DATATYPES
+from tomobase.data import BaseImageModel
+from tomobase.registrations.datatypes import image_datatypes_register
 from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout
 from qtpy.QtCore import Qt
@@ -59,9 +58,9 @@ class LayerSelectWidget(CollapsableWidget):
         if get_origin(layer_types) is Union:
             layer_types = get_args(layer_types)
             self.layer_types = [typ.get_type_id() for typ in layer_types]
-        if layer_types is Data:
+        if layer_types is BaseImageModel:
             self.layer_types = []
-            for key, value in TOMOBASE_DATATYPES.items():
+            for key, value in image_datatypes_register.items():
                 self.layer_types.append(value.value)
         else:
             layer_types = [layer_types]
@@ -76,7 +75,7 @@ class LayerSelectWidget(CollapsableWidget):
         self.combobox_types.addItem('Selectable Datatypes')
 
         for id in self.layer_types:
-            self.combobox_types.addItem(TOMOBASE_DATATYPES.loc(id).name)
+            self.combobox_types.addItem(image_datatypes_register.loc(id).name)
         self.combobox_types.setCurrentIndex(0)
         
         self.layout = QGridLayout()
@@ -161,7 +160,7 @@ class LayerSelectWidget(CollapsableWidget):
             if layer.name == self.combobox_select.currentText():#get the index of the layer
                 index = self.viewer.layers.index(layer)
                 layertype_id = layer.metadata['ct metadata']['type']
-                layertype = TOMOBASE_DATATYPES.loc(layertype_id).name
+                layertype = image_datatypes_register.loc(layertype_id).name
                 class_ = globals().get(layertype)
                 obj = class_.from_data_tuple(index, layer)
                 return obj
@@ -287,7 +286,7 @@ def get_function_widgets(func, viewer, **kwargs):
 
 def get_widget(name, label, annotation, default=None, viewer=None, **kwargs):
     isfixed = kwargs.get('isfixed', True)
-    if inspect.isclass(annotation) and issubclass(annotation, Data):
+    if inspect.isclass(annotation) and issubclass(annotation, BaseImageModel):
         widget = LayerSelectWidget(label+":", annotation, viewer, isfixed)
 
     elif get_origin(annotation) is dict:
