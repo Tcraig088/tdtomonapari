@@ -16,7 +16,7 @@ from tdtomonapari.registration import TDTOMO_NAPARI_MODULE_REGISTRATION
 from tdtomonapari.napari.base.base import TomographyMenuWidget
 #import tdtomonapari.magic
 
-from tomobase.globals import logger
+from tomobase.registers import logger
 if TDTOMO_NAPARI_MODULE_REGISTRATION.tomoacquire:
     import tomoacquire
     from tdtomonapari.napari.acquire.base import AcquistionMenuWidget

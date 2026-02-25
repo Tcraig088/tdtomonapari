@@ -13,7 +13,7 @@ from threading import Thread
 from napari.qt.threading import create_worker
 
 from tomobase.data import Volume, Sinogram, BaseImageModel
-from tomobase.globals import logger, proxy,  image_datatypes_register, GPUContext
+from tomobase.registers import logger, proxy,  image_datatypes_register, GPUContext
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 
 from tdtomonapari.napari.base.components import CollapsableWidget

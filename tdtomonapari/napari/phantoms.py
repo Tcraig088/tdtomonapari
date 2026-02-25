@@ -2,7 +2,7 @@ from functools import partial
 from typing import List
 from napari.types import LayerData
 from tomobase.log import logger
-from tomobase.globals import phantoms_register
+from tomobase.registers import phantoms_register
 from napari.qt.threading import thread_worker
 import time
 from tomobase.tiltschemes import GRS, Incremental

@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt
 from qtpy.QtGui import QCursor
 
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
-from tomobase.globals import logger, proxy, GPUContext
+from tomobase.registers import logger, proxy, GPUContext
 
 class ContextWidget(QWidget):
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):

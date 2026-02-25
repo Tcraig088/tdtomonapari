@@ -4,7 +4,7 @@ from qtpy.QtGui import QCursor
 
 
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
-from tomobase.globals import logger
+from tomobase.registers import logger
 
 class VariablesWidget(QWidget):
     def __init__(self, viewer: 'napari.viewer.Viewer', parent=None):
