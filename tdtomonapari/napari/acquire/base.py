@@ -2,7 +2,7 @@ from qtpy.QtWidgets import QMenu
 from qtpy.QtCore import Qt
 
 #from tdtomonapari.napari.acquire.controls import ConnectWidget, buildstagewidget, buildscanwidget, build_start_scan_acquire_widget
-from tomobase.log import logger
+from tomobase.core.log import logger
 from tdtomonapari.napari.acquire.devices.new import MagicNewDeviceWidget
 
 class AcquistionMenuWidget(QMenu):  

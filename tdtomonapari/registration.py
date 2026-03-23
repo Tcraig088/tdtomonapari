@@ -1,6 +1,6 @@
 from qtpy.QtCore import QObject, Signal
 
-from tomobase.registers import logger, Item, ItemDict
+from tomobase.core.registers import logger, Item, ItemDict
 
 
 class VariablesDict(ItemDict, QObject):

@@ -15,7 +15,7 @@ from tdtomonapari.napari.base.components import CollapsableWidget
 from tdtomonapari.napari.base.components import CheckableComboBox
 from tdtomonapari.napari.base.utils import get_widgets, get_values
 from tomoacquire import config
-from tomobase.log import logger
+from tomobase.core.log import logger
 import threading
 from tomobase.data import Sinogram, Image
 

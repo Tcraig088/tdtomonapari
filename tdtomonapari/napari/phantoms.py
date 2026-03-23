@@ -1,13 +1,13 @@
 from functools import partial
 from typing import List
 from napari.types import LayerData
-from tomobase.log import logger
-from tomobase.registers import phantoms_register
+from tomobase.core.log import logger
+from tomobase.core.registers import phantoms_register
 from napari.qt.threading import thread_worker
 import time
 from tomobase.tiltschemes import GRS, Incremental
 from tomobase import phantoms
-from tomobase import processes
+from tomobase import procedures
 import napari
 import magicgui
 from qtpy.QtWidgets import (
@@ -67,7 +67,7 @@ class PhantomSelectWidget(QDialog):
             napari.current_viewer().dims.ndisplay = 2
             ts = Incremental(-70, 70,2)
             angles = [ts.get_angle() for i in range(1, 71)]
-            result = processes.project(result, angles)
+            result = procedures.project(result, angles)
         self.result = result.to_data_tuple()
         self.accept()
 

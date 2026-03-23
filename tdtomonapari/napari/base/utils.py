@@ -2,7 +2,7 @@ import inspect
 import numpy as np
 from dataclasses import dataclass
 
-from tomobase.log import logger
+from tomobase.core.log import logger
 from typing import Union, get_origin, get_args
 from tomobase.data import BaseImageModel, Sinogram, Image, Volume
 from qtpy.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout,  QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit

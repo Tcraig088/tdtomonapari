@@ -2,7 +2,7 @@ from qtpy.QtWidgets import QWidget, QComboBox, QLabel, QHBoxLayout, QLineEdit, Q
 from qtpy.QtCore import Qt
 import numpy as np
 
-from tomobase.log import logger
+from tomobase.core.log import logger
 from tomobase.data import Sinogram, Image
 import inspect
 import numpy as np

@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt
 
 from tdtomonapari.napari.base.components import CheckableComboBox, FileSaveDialog
 from tomobase.registrations.tiltschemes import tiltschemes_register
-from tomobase.log import logger
+from tomobase.core.log import logger
   
 class ExperimentWidget(QWidget):
     def __init__(self, parent=None):

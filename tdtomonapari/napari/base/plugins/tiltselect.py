@@ -4,7 +4,7 @@ from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout, QSpinBox, QV
 from qtpy.QtCore import Qt, Signal
 import inspect
 from tdtomonapari.napari.base.utils import get_values, get_function_widgets
-from tomobase.log import logger
+from tomobase.core.log import logger
 import numpy as np
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 import coolname

@@ -1,6 +1,6 @@
 import logging
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QComboBox, QLabel, QProgressBar, QHBoxLayout
-from tomobase.log import tomobase_logger, logger 
+from tomobase.core.log import tomobase_logger, logger 
 
 class LogSettingsWidget(QWidget):
     def __init__(self, parent=None):
