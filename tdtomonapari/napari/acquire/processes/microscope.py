@@ -17,7 +17,7 @@ from tdtomonapari.napari.base.utils import get_widgets, get_values
 from tomoacquire import config
 from tomobase.core.log import logger
 import threading
-from tomobase.data import Sinogram, Image
+from tomobase.core.data_classes import Sinogram, Image
 
 class ScanSettingsWidget(CollapsableWidget):
     def __init__(self, title, microscope, isscan, detectors, parent):

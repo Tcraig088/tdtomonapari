@@ -4,10 +4,10 @@ from dataclasses import dataclass
 
 from tomobase.core.log import logger
 from typing import Union, get_origin, get_args
-from tomobase.data import BaseImageModel, Sinogram, Image, Volume
+from tomobase.core.data_classes import BaseImageModel, Sinogram, Image, Volume
 from qtpy.QtWidgets import QWidget, QPushButton, QVBoxLayout, QHBoxLayout,  QLabel, QCheckBox, QComboBox, QGridLayout, QSpinBox, QDoubleSpinBox, QLineEdit
 from collections.abc import Iterable
-from tomobase.data import BaseImageModel
+from tomobase.core.data_classes import BaseImageModel
 from tomobase.registrations.datatypes import image_datatypes_register
 from tdtomonapari.napari.base.components.collapsable import CollapsableWidget
 from qtpy.QtWidgets import QWidget, QLabel, QComboBox, QGridLayout

@@ -3,7 +3,7 @@ from qtpy.QtCore import Qt
 import numpy as np
 
 from tomobase.core.log import logger
-from tomobase.data import Sinogram, Image
+from tomobase.core.data_classes import Sinogram, Image
 import inspect
 import numpy as np
 import magicgui

@@ -5,9 +5,9 @@ from tomobase.core.log import logger
 from tomobase.core.registers import phantoms_register
 from napari.qt.threading import thread_worker
 import time
-from tomobase.tiltschemes import GRS, Incremental
-from tomobase import phantoms
-from tomobase import procedures
+from tomobase.domain.tiltschemes import GRS, Incremental
+from tomobase.domain import phantoms
+from tomobase.domain import procedures
 import napari
 import magicgui
 from qtpy.QtWidgets import (

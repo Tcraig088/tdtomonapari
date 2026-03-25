@@ -12,7 +12,7 @@ from qtpy.QtCore import Qt, Signal
 from threading import Thread
 from napari.qt.threading import create_worker
 
-from tomobase.data import Volume, Sinogram, BaseImageModel
+from tomobase.core.data_classes import Volume, Sinogram, BaseImageModel
 from tomobase.core.registers import logger, proxy,  image_datatypes_register, GPUContext
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 
@@ -22,7 +22,7 @@ import magicgui
 from magicgui.widgets import Container, ComboBox, Label
 from typing import Union, get_origin
 
-from tomobase.data import BaseImageModel
+from tomobase.core.data_classes import BaseImageModel
 
 def check_magicgui_type(tp):
     try:

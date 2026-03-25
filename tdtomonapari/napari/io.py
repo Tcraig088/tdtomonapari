@@ -1,4 +1,4 @@
-from tomobase.data import Sinogram
+from tomobase.core.data_classes import Sinogram
 import napari
 
 def read_sinogram(path):

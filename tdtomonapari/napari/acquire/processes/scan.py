@@ -13,7 +13,7 @@ from tomoacquire.states import MicroscopeState
 from tomoacquire.scanwindow import ScanWindow
 from tdtomonapari.napari.base.components import CollapsableWidget
 from tdtomonapari.napari.base.components import CheckableComboBox
-from tomobase.data import Sinogram, Image
+from tomobase.core.data_classes import Sinogram, Image
  
 class ScanWidget(QWidget):
     def __init__(self, viewer=None, parent=None):

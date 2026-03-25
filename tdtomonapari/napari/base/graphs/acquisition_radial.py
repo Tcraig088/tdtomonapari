@@ -2,7 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 import matplotlib
 
-from tomobase.data import Sinogram, Volume
+from tomobase.core.data_classes import Sinogram, Volume
 
 
 def acquisition_radial_plot(**kwargs):

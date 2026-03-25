@@ -11,7 +11,7 @@ from functools import partial
 from tomobase.core.registers import logger, TOMOBASE_PROCESSES, TOMOBASE_TRANSFORM_CATEGORIES, GPUContext
 from tdtomonapari.napari.base.plugins.process import ProcessWidget, MagicProcessWidget
 from tdtomonapari.napari.base.plugins.tiltselect import TiltSelectWidget
-from tomobase.data import BaseImageModel
+from tomobase.core.data_classes import BaseImageModel
 from tdtomonapari.registration import TDTOMONAPARI_VARIABLES
 from functools import wraps
 
